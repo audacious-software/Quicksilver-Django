@@ -90,16 +90,10 @@ class Execution(models.Model):
         
         output_lines = self.output.splitlines()
         
-        print(str(output_lines))
-        
         if output_lines[-1].startswith('_qs_next_run:'):
             self.task.next_run = arrow.get(output_lines[-1].replace('_qs_next_run:', '').strip()).datetime
             
-            print('set task next run: ' + self.task.next_run.isoformat())
-            
             self.task.save()
-        else:
-            print('NOT in QS context')
         
         last_line = self.output
 

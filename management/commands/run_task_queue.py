@@ -1,6 +1,7 @@
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
 
+import datetime
 import time
 
 from django.conf import settings
@@ -16,13 +17,14 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--task-queue', default='default')
         parser.add_argument('--sleep-duration', type=int, default=5)
+        parser.add_argument('--restart-after', type=int, default=30)
 
     @handle_lock
     def handle(self, *args, **options):
         try:
-            while True:
-                print('wakeup[' + str(options.get('task_queue')) + ']: ' + timezone.now().isoformat())
-
+            when_stop = timezone.now() + datetime.timedelta(seconds=(options.get('restart_after') * 60))
+            
+            while timezone.now() < when_stop:
                 loop_start = timezone.now()
 
                 overdue_tasks = []
@@ -32,7 +34,6 @@ class Command(BaseCommand):
                         overdue_tasks.append(overdue)
 
                 for task in overdue_tasks:
-                    print('RUN: ' + str(task))
                     task.run()
 
                 elapsed = (timezone.now() - loop_start).total_seconds()
@@ -40,6 +41,9 @@ class Command(BaseCommand):
                 wake_next = options.get('sleep_duration') - elapsed
 
                 if wake_next > 0:
-                    time.sleep(wake_next)
+                    time.sleep(wake_next)                    
+
+            print 'Exiting queue "' + options.get('task_queue') + '" due to regular restart...'
+
         except KeyboardInterrupt:
             print 'Exiting queue "' + options.get('task_queue') + '" due to keyboard interruption...'

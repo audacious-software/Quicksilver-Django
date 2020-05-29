@@ -22,29 +22,28 @@ Quicksilver task execution system.
 """
 
 def handle_schedule(handle):
-	def wrapper(self, *args, **options):
-		invoked_by_qs = False
+    def wrapper(self, *args, **options):
+        invoked_by_qs = False
 
-		if '_qs_context' in options:
-			invoked_by_qs = options['_qs_context']
+        if '_qs_context' in options:
+            invoked_by_qs = options['_qs_context']
 
-			del options['_qs_context']
-		
-		next_interval = None
+            del options['_qs_context']
+        
+        next_interval = None
 
-		if '_qs_next_interval' in options:
-			next_interval = options['_qs_next_interval']
+        if '_qs_next_interval' in options:
+            next_interval = options['_qs_next_interval']
 
-			del options['_qs_next_interval']
+            del options['_qs_next_interval']
 
-		handle(self, *args, **options)
+        handle(self, *args, **options)
 
-		if invoked_by_qs:
-			if next_interval is not None:
-				print('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat())
-				 
+        if invoked_by_qs:
+           if next_interval is not None:
+               print('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat())
 
-	return wrapper
+    return wrapper
 
 # Lock timeout value - how long to wait for the lock to become available.
 # Default behavior is to never wait for the lock to be available (fail fast)
