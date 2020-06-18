@@ -43,7 +43,5 @@ class Command(BaseCommand):
                 if wake_next > 0:
                     time.sleep(wake_next)                    
 
-            print 'Exiting queue "' + options.get('task_queue') + '" due to regular restart...'
-
         except KeyboardInterrupt:
             print 'Exiting queue "' + options.get('task_queue') + '" due to keyboard interruption...'
