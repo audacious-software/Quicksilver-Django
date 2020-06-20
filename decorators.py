@@ -1,7 +1,5 @@
 # pylint: disable=pointless-string-statement, line-too-long
 
-import datetime
-import functools
 import logging
 import tempfile
 import time
@@ -12,8 +10,6 @@ from lockfile import FileLock, AlreadyLocked, LockTimeout
 import arrow
 
 from django.conf import settings
-from django.utils import timezone
-from django.utils.decorators import available_attrs
 from django.utils.text import slugify
 
 """
@@ -29,7 +25,7 @@ def handle_schedule(handle):
             invoked_by_qs = options['_qs_context']
 
             del options['_qs_context']
-        
+
         next_interval = None
 
         if '_qs_next_interval' in options:
@@ -40,8 +36,8 @@ def handle_schedule(handle):
         handle(self, *args, **options)
 
         if invoked_by_qs:
-           if next_interval is not None:
-               print('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat())
+            if next_interval is not None:
+                print '_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat()
 
     return wrapper
 

@@ -4,11 +4,10 @@
 import datetime
 import time
 
-from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from ...decorators import handle_lock, handle_schedule
+from ...decorators import handle_lock
 from ...models import Task
 
 class Command(BaseCommand):
@@ -23,7 +22,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         try:
             when_stop = timezone.now() + datetime.timedelta(seconds=(options.get('restart_after') * 60))
-            
+
             while timezone.now() < when_stop:
                 loop_start = timezone.now()
 
@@ -41,7 +40,7 @@ class Command(BaseCommand):
                 wake_next = options.get('sleep_duration') - elapsed
 
                 if wake_next > 0:
-                    time.sleep(wake_next)                    
+                    time.sleep(wake_next)
 
         except KeyboardInterrupt:
             print 'Exiting queue "' + options.get('task_queue') + '" due to keyboard interruption...'

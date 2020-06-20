@@ -1,4 +1,4 @@
-# pylint: disable=no-member
+# pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
@@ -24,7 +24,7 @@ class QuicksilverIO(StringIO.StringIO, object):
     def __init__(self):
         super(QuicksilverIO, self).__init__()
 
-    def write(self, value):
+    def write(self, value): # pylint: disable=useless-super-delegation, arguments-differ
         super(QuicksilverIO, self).write(value)
 
 class Task(models.Model):
@@ -46,7 +46,7 @@ class Task(models.Model):
         self.save()
 
         self.next_run = execution.run()
-        
+
     def is_running(self):
         return self.executions.filter(status='ongoing').count() > 0
 
@@ -67,17 +67,17 @@ class Execution(models.Model):
             self.status = 'ongoing'
 
             self.save()
-            
+
             orig_stdout = sys.stdout
             sys.stdout = qs_out
-            
+
             interval = self.task.repeat_interval
-            
+
             if interval < 1:
                 interval = None
 
             call_command(self.task.command, *args, _qs_context=True, _qs_next_interval=interval)
-            
+
             sys.stdout = orig_stdout
 
             self.status = 'success'
@@ -87,14 +87,12 @@ class Execution(models.Model):
 
         self.ended = timezone.now()
         self.output = qs_out.getvalue()
-        
+
         output_lines = self.output.splitlines()
-        
+
         if output_lines[-1].startswith('_qs_next_run:'):
             self.task.next_run = arrow.get(output_lines[-1].replace('_qs_next_run:', '').strip()).datetime
-            
+
             self.task.save()
-        
-        last_line = self.output
 
         self.save()
