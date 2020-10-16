@@ -20,12 +20,12 @@ RUN_STATUSES = (
     ('ongoing', 'Ongoing',),
 )
 
-class QuicksilverIO(io.StringIO, object):
-    def __init__(self):
-        super(QuicksilverIO, self).__init__()
+class QuicksilverIO(io.StringIO, object): # pylint: disable=too-few-public-methods, useless-object-inheritance
+    def __init__(self): # pylint: disable=useless-super-delegation
+        super(QuicksilverIO, self).__init__() # pylint: disable=super-with-arguments
 
     def write(self, value): # pylint: disable=useless-super-delegation, arguments-differ
-        super(QuicksilverIO, self).write(value)
+        super(QuicksilverIO, self).write(value) # pylint: disable=super-with-arguments
 
 class Task(models.Model):
     command = models.CharField(max_length=4096, db_index=True)
@@ -45,13 +45,13 @@ class Task(models.Model):
 
         self.save()
 
-        self.next_run = execution.run()
+        execution.run()
 
     def is_running(self):
         return self.executions.filter(status='ongoing').count() > 0
 
 class Execution(models.Model):
-    task = models.ForeignKey(Task, related_name='executions')
+    task = models.ForeignKey(Task, related_name='executions', on_delete=models.CASCADE)
 
     started = models.DateTimeField()
     ended = models.DateTimeField(null=True, blank=True)
