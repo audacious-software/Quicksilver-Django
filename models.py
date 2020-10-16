@@ -20,7 +20,7 @@ RUN_STATUSES = (
     ('ongoing', 'Ongoing',),
 )
 
-class QuicksilverIO(io.StringIO, object): # pylint: disable=too-few-public-methods, useless-object-inheritance
+class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-methods, useless-object-inheritance
     def __init__(self): # pylint: disable=useless-super-delegation
         super(QuicksilverIO, self).__init__() # pylint: disable=super-with-arguments
 
