@@ -1,11 +1,11 @@
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 import sys
 import traceback
 
-import StringIO
+import io
 
 import arrow
 
@@ -20,7 +20,7 @@ RUN_STATUSES = (
     ('ongoing', 'Ongoing',),
 )
 
-class QuicksilverIO(StringIO.StringIO, object):
+class QuicksilverIO(io.StringIO, object):
     def __init__(self):
         super(QuicksilverIO, self).__init__()
 

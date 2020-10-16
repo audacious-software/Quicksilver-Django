@@ -1,3 +1,4 @@
+from __future__ import print_function
 # pylint: disable=pointless-string-statement, line-too-long
 
 import logging
@@ -37,7 +38,7 @@ def handle_schedule(handle):
 
         if invoked_by_qs:
             if next_interval is not None:
-                print '_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat()
+                print('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat())
 
     return wrapper
 

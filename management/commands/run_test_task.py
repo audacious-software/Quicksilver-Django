@@ -1,3 +1,4 @@
+from __future__ import print_function
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
 
@@ -15,4 +16,4 @@ class Command(BaseCommand):
     @handle_lock
     @handle_schedule
     def handle(self, *args, **options):
-        print 'Current time: ' + timezone.now().isoformat()
+        print('Current time: ' + timezone.now().isoformat())

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
 
@@ -43,4 +44,4 @@ class Command(BaseCommand):
                     time.sleep(wake_next)
 
         except KeyboardInterrupt:
-            print 'Exiting queue "' + options.get('task_queue') + '" due to keyboard interruption...'
+            print('Exiting queue "' + options.get('task_queue') + '" due to keyboard interruption...')
