@@ -18,6 +18,16 @@ Decorators for wrapping existing Django management commands for use within the
 Quicksilver task execution system.
 """
 
+def add_qs_arguments(handle):
+    def wrapper(self, parser):
+        parser.add_argument('--qs-context', dest='_qs_context', default=True, required=False)
+        parser.add_argument('--qs-next-interval', dest='_qs_next_interval', type=int, default=5, required=False)
+
+        handle(self, parser)
+
+    return wrapper
+
+
 def handle_schedule(handle):
     def wrapper(self, *args, **options):
         invoked_by_qs = False

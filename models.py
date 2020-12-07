@@ -1,7 +1,6 @@
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
 
-
 import sys
 import traceback
 
@@ -12,6 +11,7 @@ import arrow
 from django.core.management import call_command
 from django.db import models
 from django.utils import timezone
+from django.utils.encoding import python_2_unicode_compatible
 
 RUN_STATUSES = (
     ('success', 'Successful',),
@@ -25,8 +25,9 @@ class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-method
         super(QuicksilverIO, self).__init__() # pylint: disable=super-with-arguments
 
     def write(self, value): # pylint: disable=useless-super-delegation, arguments-differ
-        super(QuicksilverIO, self).write(value) # pylint: disable=super-with-arguments
+        super(QuicksilverIO, self).write(value.encode()) # pylint: disable=super-with-arguments
 
+@python_2_unicode_compatible
 class Task(models.Model):
     command = models.CharField(max_length=4096, db_index=True)
     arguments = models.TextField(max_length=1048576)
@@ -36,7 +37,7 @@ class Task(models.Model):
 
     next_run = models.DateTimeField(null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.command + '[' + self.queue + '] ' + ' '.join(self.arguments.splitlines())
 
     def run(self):
@@ -50,6 +51,7 @@ class Task(models.Model):
     def is_running(self):
         return self.executions.filter(status='ongoing').count() > 0
 
+@python_2_unicode_compatible
 class Execution(models.Model):
     task = models.ForeignKey(Task, related_name='executions', on_delete=models.CASCADE)
 
@@ -57,6 +59,9 @@ class Execution(models.Model):
     ended = models.DateTimeField(null=True, blank=True)
     output = models.TextField(max_length=1048576, null=True, blank=True)
     status = models.CharField(max_length=64, choices=RUN_STATUSES, default='pending')
+
+    def __str__(self):
+        return str(self.task)
 
     def run(self):
         qs_out = QuicksilverIO()
@@ -90,8 +95,10 @@ class Execution(models.Model):
 
         output_lines = self.output.splitlines()
 
-        if output_lines[-1].startswith('_qs_next_run:'):
-            self.task.next_run = arrow.get(output_lines[-1].replace('_qs_next_run:', '').strip()).datetime
+        last_line = output_lines[-1].decode('utf-8')
+
+        if last_line.startswith('_qs_next_run:'):
+            self.task.next_run = arrow.get(last_line.replace('_qs_next_run:', '').strip()).datetime
 
             self.task.save()
 
