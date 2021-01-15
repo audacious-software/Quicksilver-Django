@@ -20,6 +20,16 @@ RUN_STATUSES = (
     ('ongoing', 'Ongoing',),
 )
 
+class PermissionsSupport(models.Model):
+    class Meta:
+        managed = False
+        default_permissions = ()
+
+        permissions = (
+            ('quicksilver_access_view', 'View Quicksilver components'),
+            ('quicksilver_access_edit', 'Edit Quicksilver components'),
+        )
+
 class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-methods, useless-object-inheritance
     def __init__(self): # pylint: disable=useless-super-delegation
         super(QuicksilverIO, self).__init__() # pylint: disable=super-with-arguments
