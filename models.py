@@ -26,8 +26,7 @@ class PermissionsSupport(models.Model):
         default_permissions = ()
 
         permissions = (
-            ('quicksilver_access_view', 'View Quicksilver components'),
-            ('quicksilver_access_edit', 'Edit Quicksilver components'),
+            ('access_module', 'Access Quicksilver components'),
         )
 
 class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-methods, useless-object-inheritance
