@@ -20,7 +20,7 @@ RUN_STATUSES = (
     ('ongoing', 'Ongoing',),
 )
 
-class PermissionsSupport(models.Model):
+class PermissionsSupport(models.Model): # pylint: disable=old-style-class, no-init, too-few-public-methods
     class Meta:
         managed = False
         default_permissions = ()
