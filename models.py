@@ -21,7 +21,7 @@ RUN_STATUSES = (
 )
 
 class PermissionsSupport(models.Model): # pylint: disable=old-style-class, no-init, too-few-public-methods
-    class Meta:
+    class Meta: # pylint: disable=too-few-public-methods
         managed = False
         default_permissions = ()
 
