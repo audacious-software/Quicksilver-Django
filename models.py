@@ -100,11 +100,11 @@ class Execution(models.Model):
             self.status = 'error'
 
         self.ended = timezone.now()
-        self.output = qs_out.getvalue()
+        self.output = qs_out.getvalue().decode('utf-8')
 
         output_lines = self.output.splitlines()
 
-        last_line = output_lines[-1].decode('utf-8')
+        last_line = output_lines[-1]
 
         if last_line.startswith('_qs_next_run:'):
             self.task.next_run = arrow.get(last_line.replace('_qs_next_run:', '').strip()).datetime
