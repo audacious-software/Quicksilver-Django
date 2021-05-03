@@ -1,9 +1,9 @@
-from __future__ import print_function
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 import datetime
-import time
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -20,11 +20,11 @@ class Command(BaseCommand):
     @handle_lock
     def handle(self, *args, **options):
         before = timezone.now() - datetime.timedelta(seconds=(60 * options['before_minutes']))
-        
+
         if int(options['verbosity']) > 1:
             print(before.isoformat() + ' -- ' + str(options['before_minutes']) + ' -- ' + str(options['verbosity']))
 
         deleted = Execution.objects.filter(ended__lte=before, status='success').delete()[0]
-        
+
         if int(options['verbosity']) > 1:
             print('Cleared ' + str(deleted) + ' task execution record(s).')
