@@ -39,7 +39,6 @@ jobs:
             mv ../quicksilver qs
             cd qs
             cp quicksilver/circle_settings.py qs/settings.py
-            cp quicksilver/circle_urls.py qs/urls.py
             python manage.py migrate
             python manage.py test
             cp quicksilver/.pylintrc .
@@ -84,7 +83,6 @@ jobs:
             mv ../quicksilver qs
             cd qs
             cp quicksilver/circle_settings.py qs/settings.py
-            cp quicksilver/circle_urls.py qs/urls.py
             python manage.py migrate
             python manage.py test
             cp quicksilver/.pylintrc .
