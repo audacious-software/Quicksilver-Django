@@ -40,7 +40,7 @@ MIDDLEWARE = (
     'django.middleware.security.SecurityMiddleware',
 )
 
-ROOT_URLCONF = 'django_site.urls'
+ROOT_URLCONF = 'qs.urls'
 
 TEMPLATES = [
     {
