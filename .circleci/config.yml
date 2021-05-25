@@ -37,7 +37,7 @@ jobs:
             cd django
             django-admin.py startproject qs
             mv ../quicksilver qs
-            cd nm
+            cd qs
             cp quicksilver/circle_settings.py qs/settings.py
             cp quicksilver/circle_urls.py qs/urls.py
             python manage.py migrate
@@ -82,7 +82,7 @@ jobs:
             cd django
             django-admin.py startproject qs
             mv ../quicksilver qs
-            cd nm
+            cd qs
             cp quicksilver/circle_settings.py qs/settings.py
             cp quicksilver/circle_urls.py qs/urls.py
             python manage.py migrate
