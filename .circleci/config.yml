@@ -26,10 +26,17 @@ jobs:
       - restore_cache:
           key: venv-38-{{ .Branch }}-{{ checksum "requirements.txt" }}
       - run:
+          name: Install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: Wait for database
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
           name: Build and validate
           command: |
-            wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz            python3 -m venv /home/circleci/venv
-            dockerize -wait tcp://localhost:5432 -timeout 1m
+            python3 -m venv /home/circleci/venv
             . /home/circleci/venv/bin/activate
             pip install -r requirements.txt --progress-bar off
             cd ..
@@ -44,9 +51,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .
-        environment:
-          DOCKERIZE_VERSION: v0.3.0
+            bandit -r .      
       - save_cache:
           key: venv-38-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
@@ -73,10 +78,16 @@ jobs:
       - restore_cache:
           key: venv-27-{{ .Branch }}-{{ checksum "requirements.txt" }}
       - run:
+          name: Install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: Wait for database
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
           name: Build and validate
           command: |
-            wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz            python3 -m venv /home/circleci/venv
-            dockerize -wait tcp://localhost:5432 -timeout 1m
             virtualenv /home/circleci/venv
             . /home/circleci/venv/bin/activate
             pip install -r requirements.txt --progress-bar off
@@ -92,9 +103,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .
-        environment:
-          DOCKERIZE_VERSION: v0.3.0
+            bandit -r .      
       - save_cache:
           key: venv-27-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
