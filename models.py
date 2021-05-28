@@ -50,10 +50,7 @@ class Task(models.Model):
         return self.command + '[' + self.queue + '] ' + ' '.join(self.arguments.splitlines())
 
     def run(self):
-        execution = Execution(task=self, started=timezone.now())
-        execution.save()
-
-        self.save()
+        execution = Execution.objects.create(task=self, started=timezone.now())
 
         execution.run()
 
