@@ -51,7 +51,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .      
+            bandit -r .
       - save_cache:
           key: venv-38-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
@@ -103,7 +103,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .      
+            bandit -r .
       - save_cache:
           key: venv-27-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
