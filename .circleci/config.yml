@@ -93,6 +93,8 @@ jobs:
             cp quicksilver/.pylintrc .
             pylint quicksilver
             bandit -r .
+        environment:
+          DOCKERIZE_VERSION: v0.3.0
       - save_cache:
           key: venv-27-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
