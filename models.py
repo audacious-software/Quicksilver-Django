@@ -8,10 +8,11 @@ import io
 
 import arrow
 
+from six import python_2_unicode_compatible
+
 from django.core.management import call_command
 from django.db import models
 from django.utils import timezone
-from django.utils.encoding import python_2_unicode_compatible
 
 RUN_STATUSES = (
     ('success', 'Successful',),
