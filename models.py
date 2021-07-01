@@ -86,7 +86,7 @@ class Execution(models.Model):
             interval = self.task.repeat_interval
 
             if interval < 1:
-                interval = None
+                interval = 5
 
             call_command(self.task.command, *args, _qs_context=True, _qs_next_interval=interval)
 
