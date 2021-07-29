@@ -1,10 +1,11 @@
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
 
-import sys
-import traceback
+from __future__ import print_function
 
 import io
+import sys
+import traceback
 
 import arrow
 
@@ -102,11 +103,14 @@ class Execution(models.Model):
 
         output_lines = self.output.splitlines()
 
-        last_line = output_lines[-1]
+        if output_lines:
+            last_line = output_lines[-1]
 
-        if last_line.startswith('_qs_next_run:'):
-            self.task.next_run = arrow.get(last_line.replace('_qs_next_run:', '').strip()).datetime
+            if last_line.startswith('_qs_next_run:'):
+                self.task.next_run = arrow.get(last_line.replace('_qs_next_run:', '').strip()).datetime
 
-            self.task.save()
+                self.task.save()
 
-        self.save()
+            self.save()
+        else:
+            print('Task not Quicksilver-enabled: ' + str(self.task))
