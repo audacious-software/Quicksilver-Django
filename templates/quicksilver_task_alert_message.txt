@@ -1,0 +1,9 @@
+The Quicksilver task "{{ task.command }}" has been running for {{ execution.runtime|floatformat:2 }} seconds (mean = {{ runtime_mean|floatformat:2 }}, std. dev. = {{ runtime_std|floatformat:2 }}.
+
+Please review the status of this task on {{ host }}:
+
+    https://{{ host }}/admin/quicksilver/execution/{{ execution.pk }}/change/
+
+Thank you,
+
+- Quicksilver Task Queue
