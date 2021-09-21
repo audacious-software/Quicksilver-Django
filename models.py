@@ -9,6 +9,7 @@ import sys
 import traceback
 
 import arrow
+import numpy
 
 from six import python_2_unicode_compatible
 
