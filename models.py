@@ -99,7 +99,7 @@ class Task(models.Model):
 
         host = settings.ALLOWED_HOSTS[0]
 
-        admins = list(filter(lambda admin: admin[1], settings.ADMINS))
+        admins = [admin[1] for admin in settings.ADMINS]
 
         open_execution = self.executions.filter(ended=None).order_by('started').first()
 
@@ -116,7 +116,7 @@ class Task(models.Model):
 
         from_addr = 'quicksilver@' + host
 
-        email = EmailMessage(subject, message, from_addr, admins, headers = {'Reply-To': admins[0] })
+        email = EmailMessage(subject, message, from_addr, admins, headers={'Reply-To': admins[0]})
         email.send()
 
         postpone_interval = 15 * 60
