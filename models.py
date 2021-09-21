@@ -6,7 +6,6 @@ from __future__ import print_function
 import datetime
 import io
 import sys
-import statistics
 import traceback
 
 import arrow
@@ -78,8 +77,8 @@ class Task(models.Model):
         open_execution = self.executions.filter(ended=None).order_by('started').first()
 
         if open_execution is not None and len(runtimes) >= 5:
-            runtime_std = statistics.stdev(runtimes)
-            runtime_mean = statistics.mean(runtimes)
+            runtime_std = numpy.std(runtimes)
+            runtime_mean = numpy.mean(runtimes)
 
             threshold = runtime_mean + (2 * runtime_std) # 95% out of bounds
 
@@ -94,8 +93,8 @@ class Task(models.Model):
         for execution in self.executions.exclude(ended=None):
             runtimes.append(execution.runtime())
 
-        runtime_std = statistics.stdev(runtimes)
-        runtime_mean = statistics.mean(runtimes)
+        runtime_std = numpy.std(runtimes)
+        runtime_mean = numpy.mean(runtimes)
 
         host = settings.ALLOWED_HOSTS[0]
 
