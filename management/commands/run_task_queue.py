@@ -32,6 +32,8 @@ class Command(BaseCommand):
                 for overdue in Task.objects.exclude(next_run=None).filter(next_run__lte=timezone.now(), queue=options.get('task_queue')).order_by('next_run'):
                     if overdue.is_running() is False:
                         overdue_tasks.append(overdue)
+                    elif overdue.should_alert():
+                        overdue.alert()
 
                 for task in overdue_tasks:
                     task.run()

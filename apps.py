@@ -5,4 +5,4 @@ from django.apps import AppConfig
 
 class QuicksilverConfig(AppConfig):
     name = 'quicksilver'
-    default_auto_field = 'django.db.models.AutoField'
+    default_auto_field = 'django.db.models.BigAutoField'

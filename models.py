@@ -3,16 +3,21 @@
 
 from __future__ import print_function
 
+import datetime
 import io
 import sys
 import traceback
 
 import arrow
+import numpy
 
 from six import python_2_unicode_compatible
 
+from django.conf import settings
+from django.core.mail import EmailMessage
 from django.core.management import call_command
 from django.db import models
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 RUN_STATUSES = (
@@ -48,6 +53,8 @@ class Task(models.Model):
 
     next_run = models.DateTimeField(null=True, blank=True)
 
+    postpone_alert_until = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return self.command + '[' + self.queue + '] ' + ' '.join(self.arguments.splitlines())
 
@@ -58,6 +65,69 @@ class Task(models.Model):
 
     def is_running(self):
         return self.executions.filter(status='ongoing').count() > 0
+
+    def should_alert(self):
+        if self.postpone_alert_until is not None and timezone.now() < self.postpone_alert_until:
+            return False
+
+        runtimes = []
+
+        for execution in self.executions.exclude(ended=None):
+            runtimes.append(execution.runtime())
+
+        open_execution = self.executions.filter(ended=None).order_by('started').first()
+
+        if open_execution is not None and len(runtimes) >= 5:
+            runtime_std = numpy.std(runtimes)
+            runtime_mean = numpy.mean(runtimes)
+
+            threshold = runtime_mean + (2 * runtime_std) # 95% out of bounds
+
+            if open_execution.runtime() > threshold:
+                return True
+
+        return False
+
+    def alert(self):
+        runtimes = []
+
+        for execution in self.executions.exclude(ended=None):
+            runtimes.append(execution.runtime())
+
+        runtime_std = numpy.std(runtimes)
+        runtime_mean = numpy.mean(runtimes)
+
+        host = settings.ALLOWED_HOSTS[0]
+
+        admins = [admin[1] for admin in settings.ADMINS]
+
+        open_execution = self.executions.filter(ended=None).order_by('started').first()
+
+        context = {
+            'task': self,
+            'execution': open_execution,
+            'runtime_mean': runtime_mean,
+            'runtime_std': runtime_std,
+            'host': host
+        }
+
+        message = render_to_string('quicksilver_task_alert_message.txt', context)
+        subject = render_to_string('quicksilver_task_alert_subject.txt', context)
+
+        from_addr = 'quicksilver@' + host
+
+        email = EmailMessage(subject, message, from_addr, admins, headers={'Reply-To': admins[0]})
+        email.send()
+
+        postpone_interval = 15 * 60
+
+        try:
+            postpone_interval = settings.QUICKSILVER_ALERT_INTERVAL
+        except AttributeError:
+            pass
+
+        self.postpone_alert_until = timezone.now() + datetime.timedelta(seconds=postpone_interval)
+        self.save()
 
 @python_2_unicode_compatible
 class Execution(models.Model):
@@ -114,3 +184,12 @@ class Execution(models.Model):
             self.save()
         else:
             print('Task not Quicksilver-enabled: ' + str(self.task))
+
+    def runtime(self):
+        if self.started is None:
+            return None
+
+        if self.ended is not None:
+            return (self.ended - self.started).total_seconds()
+
+        return (timezone.now() - self.started).total_seconds()
