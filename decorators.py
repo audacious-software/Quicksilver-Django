@@ -97,7 +97,7 @@ def handle_lock(handle):
 
         lock_name = self.__module__.split('.').pop()
 
-        lock_filename = '%s/%s__%s__%s' % (tempfile.gettempdir(), lock_prefix, lock_name, lock_suffix)
+        lock_filename = '%s/%s__%s__%s' % (tempfile.gettempdir(), lock_prefix, lock_name, lock_suffix) # pylint: disable=consider-using-f-string
 
         while lock_filename.endswith('_'):
             lock_filename = lock_filename[:-1]
