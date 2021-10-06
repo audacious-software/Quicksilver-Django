@@ -46,7 +46,7 @@ class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-method
 @python_2_unicode_compatible
 class Task(models.Model):
     command = models.CharField(max_length=4096, db_index=True)
-    arguments = models.TextField(max_length=1048576)
+    arguments = models.TextField(max_length=1048576, default='--no-color', help_text='One argument per line')
     queue = models.CharField(max_length=128, default='default')
 
     repeat_interval = models.IntegerField(default=0)
