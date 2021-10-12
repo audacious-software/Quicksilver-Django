@@ -33,5 +33,10 @@ class Command(BaseCommand):
 
         for task in tasks:
             if Task.objects.filter(command=task[0]).count() == 0:
-                Task.objects.create(command=task[0], arguments=task[1], repeat_interval=task[2], next_run=timezone.now())
+                task_obj = Task.objects.create(command=task[0], arguments=task[1], repeat_interval=task[2], next_run=timezone.now())
+
+                if len(task) > 3:
+                    task_obj.queue = task[3]
+                    task_obj.save()
+
                 print('Installed ' + str(task) + '...')
