@@ -1,8 +1,6 @@
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
-from builtins import str # pylint: disable=redefined-builtin
 import json
 
 from django.http import HttpResponse
