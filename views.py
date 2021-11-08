@@ -35,7 +35,7 @@ def quicksilver_status(request): # pylint: disable=unused-argument
         'status': 'ok',
     }
 
-    if len(overdue_tasks) > 0:
+    if len(overdue_tasks) > 0: # pylint: disable=len-as-condition
         payload['status'] = 'error'
 
     return HttpResponse(json.dumps(payload, indent=2), content_type='application/json', status=200)
