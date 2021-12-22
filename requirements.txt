@@ -3,7 +3,7 @@ arrow==1.2.0; python_version >= '3.0'
 bandit==1.7.0; python_version >= '3.0'
 bandit==1.6.2; python_version < '3.0'
 Django==1.11.29; python_version < '3.0'
-Django==3.2.7; python_version >= '3.0'
+Django==3.2.10; python_version >= '3.0'
 lockfile==0.12.2
 numpy==1.21.0; python_version >= '3.0'
 numpy==1.16.6; python_version < '3.0'
