@@ -46,7 +46,7 @@ class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-method
 @python_2_unicode_compatible
 class Task(models.Model):
     command = models.CharField(max_length=4096, db_index=True)
-    arguments = models.TextField(max_length=1048576)
+    arguments = models.TextField(max_length=1048576, default='--no-color', help_text='One argument per line')
     queue = models.CharField(max_length=128, default='default')
 
     repeat_interval = models.IntegerField(default=0)
@@ -66,24 +66,29 @@ class Task(models.Model):
     def is_running(self):
         return self.executions.filter(status='ongoing').count() > 0
 
-    def should_alert(self):
-        if self.postpone_alert_until is not None and timezone.now() < self.postpone_alert_until:
-            return False
-
+    def runtime_outlier_threshold(self, stddevs=2):
         runtimes = []
 
         for execution in self.executions.exclude(ended=None):
             runtimes.append(execution.runtime())
 
-        open_execution = self.executions.filter(ended=None).order_by('started').first()
-
-        if open_execution is not None and len(runtimes) >= 5:
+        if len(runtimes) > 5:
             runtime_std = numpy.std(runtimes)
             runtime_mean = numpy.mean(runtimes)
 
-            threshold = runtime_mean + (2 * runtime_std) # 95% out of bounds
+            return runtime_mean + (stddevs * runtime_std)
 
-            if open_execution.runtime() > threshold:
+        return None
+
+    def should_alert(self):
+        if self.postpone_alert_until is not None and timezone.now() < self.postpone_alert_until:
+            return False
+
+        open_execution = self.executions.filter(ended=None).order_by('started').first()
+        outlier_threshold = self.runtime_outlier_threshold()
+
+        if open_execution is not None and outlier_threshold is not None:
+            if open_execution.runtime() > outlier_threshold:
                 return True
 
         return False
