@@ -19,14 +19,17 @@ def quicksilver_status(request): # pylint: disable=unused-argument
 
             delta_seconds = (now - latest_execution.ended).total_seconds()
 
-            outlier_threshold = (overdue.repeat_interval * 2) + overdue.runtime_outlier_threshold()
+            runtime_outlier_threshold = overdue.runtime_outlier_threshold()
 
-            if delta_seconds > outlier_threshold:
-                overdue_tasks.append({
-                    'task': str(overdue),
-                    'outlier_threshold': outlier_threshold,
-                    'overdue': delta_seconds
-                })
+            if runtime_outlier_threshold is not None:
+                outlier_threshold = (overdue.repeat_interval * 2) + overdue.runtime_outlier_threshold()
+
+                if delta_seconds > outlier_threshold:
+                    overdue_tasks.append({
+                        'task': str(overdue),
+                        'outlier_threshold': outlier_threshold,
+                        'overdue': delta_seconds
+                    })
         elif overdue.should_alert():
             overdue.alert()
 
