@@ -90,6 +90,11 @@ class Task(models.Model):
         if open_execution is not None and outlier_threshold is not None:
             if open_execution.runtime() > outlier_threshold:
                 return True
+        try:
+            if open_execution.runtime() > settings.QUICKSILVER_MAX_TASK_RUNTIME_SECONDS:
+                return True
+        except AttributeError:
+            pass
 
         return False
 
