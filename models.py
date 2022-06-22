@@ -104,8 +104,12 @@ class Task(models.Model):
         for execution in self.executions.exclude(ended=None):
             runtimes.append(execution.runtime())
 
-        runtime_std = numpy.std(runtimes)
-        runtime_mean = numpy.mean(runtimes)
+        runtime_std = -1
+        runtime_mean = -1
+
+        if runtimes:
+            runtime_std = numpy.std(runtimes)
+            runtime_mean = numpy.mean(runtimes)
 
         host = settings.ALLOWED_HOSTS[0]
 
