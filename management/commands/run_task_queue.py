@@ -5,6 +5,7 @@ from __future__ import print_function
 import datetime
 import time
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -24,6 +25,13 @@ class Command(BaseCommand):
         try:
             when_stop = timezone.now() + datetime.timedelta(seconds=(options.get('restart_after') * 60))
 
+            cycle_sleep = 5
+
+            try:
+                cycle_sleep = settings.QUICKSILVER_MIN_CYCLE_SLEEP_SECONDS
+            except AttributeError:
+                pass
+
             while timezone.now() < when_stop:
                 loop_start = timezone.now()
 
@@ -42,8 +50,10 @@ class Command(BaseCommand):
 
                 wake_next = options.get('sleep_duration') - elapsed
 
-                if wake_next > 0:
+                if wake_next > cycle_sleep:
                     time.sleep(wake_next)
+                else:
+                    time.sleep(cycle_sleep)
 
         except KeyboardInterrupt:
             print('Exiting queue "' + options.get('task_queue') + '" due to keyboard interruption...')

@@ -87,14 +87,29 @@ class Task(models.Model):
         open_execution = self.executions.filter(ended=None).order_by('started').first()
         outlier_threshold = self.runtime_outlier_threshold()
 
-        if open_execution is not None and outlier_threshold is not None:
-            if open_execution.runtime() > outlier_threshold:
-                return True
-        try:
-            if open_execution.runtime() > settings.QUICKSILVER_MAX_TASK_RUNTIME_SECONDS:
-                return True
-        except AttributeError:
-            pass
+
+        if open_execution is not None:
+            runtime = open_execution.runtime()
+
+            if outlier_threshold is not None:
+                if open_execution.runtime() > outlier_threshold:
+                    return True
+
+            alert_seconds = 60
+
+            try:
+                alert_seconds = settings.QUICKSILVER_MIN_TASK_ALERT_RUNTIME_SECONDS
+            except AttributeError:
+                pass
+
+            if runtime < alert_seconds:
+                return False
+
+            try:
+                if runtime > settings.QUICKSILVER_MAX_TASK_RUNTIME_SECONDS:
+                    return True
+            except AttributeError:
+                pass
 
         return False
 
