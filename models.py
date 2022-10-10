@@ -132,7 +132,7 @@ class Task(models.Model):
 
         open_execution = self.executions.filter(ended=None).order_by('started').first()
 
-        if open_execution is not None and open_execution.runtime > 10:
+        if open_execution is not None and open_execution.runtime() > 10:
             context = {
                 'task': self,
                 'execution': open_execution,
