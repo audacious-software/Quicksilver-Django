@@ -132,31 +132,32 @@ class Task(models.Model):
 
         open_execution = self.executions.filter(ended=None).order_by('started').first()
 
-        context = {
-            'task': self,
-            'execution': open_execution,
-            'runtime_mean': runtime_mean,
-            'runtime_std': runtime_std,
-            'host': host
-        }
+        if open_execution is not None and open_execution.runtime > 10:
+            context = {
+                'task': self,
+                'execution': open_execution,
+                'runtime_mean': runtime_mean,
+                'runtime_std': runtime_std,
+                'host': host
+            }
 
-        message = render_to_string('quicksilver_task_alert_message.txt', context)
-        subject = render_to_string('quicksilver_task_alert_subject.txt', context)
+            message = render_to_string('quicksilver_task_alert_message.txt', context)
+            subject = render_to_string('quicksilver_task_alert_subject.txt', context)
 
-        from_addr = 'quicksilver@' + host
+            from_addr = 'quicksilver@' + host
 
-        email = EmailMessage(subject, message, from_addr, admins, headers={'Reply-To': admins[0]})
-        email.send()
+            email = EmailMessage(subject, message, from_addr, admins, headers={'Reply-To': admins[0]})
+            email.send()
 
-        postpone_interval = 15 * 60
+            postpone_interval = 15 * 60
 
-        try:
-            postpone_interval = settings.QUICKSILVER_ALERT_INTERVAL
-        except AttributeError:
-            pass
+            try:
+                postpone_interval = settings.QUICKSILVER_ALERT_INTERVAL
+            except AttributeError:
+                pass
 
-        self.postpone_alert_until = timezone.now() + datetime.timedelta(seconds=postpone_interval)
-        self.save()
+            self.postpone_alert_until = timezone.now() + datetime.timedelta(seconds=postpone_interval)
+            self.save()
 
 @python_2_unicode_compatible
 class Execution(models.Model):
