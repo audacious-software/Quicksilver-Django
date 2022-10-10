@@ -9,7 +9,7 @@ from django.utils import timezone
 from .models import Task
 
 def quicksilver_status(request): # pylint: disable=unused-argument
-    overdue_tasks = []
+    issues = []
 
     now = timezone.now()
 
@@ -26,20 +26,25 @@ def quicksilver_status(request): # pylint: disable=unused-argument
                     outlier_threshold = (overdue.repeat_interval * 2) + overdue.runtime_outlier_threshold()
 
                     if delta_seconds > outlier_threshold:
-                        overdue_tasks.append({
+                        issues.append({
                             'task': str(overdue),
                             'outlier_threshold': outlier_threshold,
                             'overdue': delta_seconds
                         })
         elif overdue.should_alert():
             overdue.alert()
+        elif overdue.executions.all().count() < 2:
+            issues.append({
+                'task': str(overdue),
+                'issue': 'Only %d runs recorded.' % overdue.executions.all().count()
+            })
 
     payload = {
-        'overdue_tasks': overdue_tasks,
+        'issues': issues,
         'status': 'ok',
     }
 
-    if len(overdue_tasks) > 0: # pylint: disable=len-as-condition
+    if len(issues) > 0: # pylint: disable=len-as-condition
         payload['status'] = 'error'
 
     return HttpResponse(json.dumps(payload, indent=2), content_type='application/json', status=200)
