@@ -93,7 +93,8 @@ class Task(models.Model):
             if outlier_threshold is not None:
                 if open_execution.runtime() > outlier_threshold:
                     return True
-                elif self.executions.exclude(ended=None).count() < 2:
+
+                if self.executions.exclude(ended=None).count() < 2:
                     return True
 
             alert_seconds = 60
