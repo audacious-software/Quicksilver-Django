@@ -87,7 +87,6 @@ class Task(models.Model):
         open_execution = self.executions.filter(ended=None).order_by('started').first()
         outlier_threshold = self.runtime_outlier_threshold()
 
-
         if open_execution is not None:
             runtime = open_execution.runtime()
 
