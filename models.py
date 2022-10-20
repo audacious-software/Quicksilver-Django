@@ -46,7 +46,7 @@ class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-method
 @python_2_unicode_compatible
 class Task(models.Model):
     command = models.CharField(max_length=4096, db_index=True)
-    arguments = models.TextField(max_length=1048576, default='--no-color', help_text='One argument per line')
+    arguments = models.TextField(max_length=1048576, help_text='One argument per line', null=True, blank=True)
     queue = models.CharField(max_length=128, default='default')
 
     repeat_interval = models.IntegerField(default=0)
@@ -177,7 +177,10 @@ class Execution(models.Model):
     def run(self):
         qs_out = QuicksilverIO()
 
-        args = self.task.arguments.splitlines()
+        args = []
+
+        if self.task.arguments is not None and self.task.arguments.strip() != '':
+            args = self.task.arguments.split()
 
         try:
             self.status = 'ongoing'
