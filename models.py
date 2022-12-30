@@ -196,7 +196,7 @@ class Task(models.Model):
             except AttributeError:
                 pass
 
-            self.postpone_alert_until = timezone.now() + datetime.timedelta(seconds=postpone_interval)
+            self.postpone_alert_until = now + datetime.timedelta(seconds=postpone_interval)
             self.save()
 
 @python_2_unicode_compatible
