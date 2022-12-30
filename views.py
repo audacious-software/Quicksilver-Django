@@ -13,7 +13,7 @@ def quicksilver_status(request): # pylint: disable=unused-argument
 
     now = timezone.now()
 
-    for overdue in Task.objects.exclude(next_run=None, repeat_interval__lte=0).filter(next_run__lte=now).order_by('next_run'):
+    for overdue in Task.objects.exclude(next_run=None, repeat_interval__lte=0).filter(next_run__lte=now).order_by('next_run'): # pylint: disable=too-many-nested-blocks
         if overdue.is_running() is False:
             latest_execution = overdue.executions.exclude(ended=None).order_by('-ended').first()
 
