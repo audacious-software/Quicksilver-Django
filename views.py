@@ -31,6 +31,9 @@ def quicksilver_status(request): # pylint: disable=unused-argument
                             'outlier_threshold': outlier_threshold,
                             'overdue': delta_seconds
                         })
+
+                        if overdue.should_alert():
+                            overdue.alert()
         elif overdue.should_alert():
             overdue.alert()
         elif overdue.executions.all().count() < 2:
