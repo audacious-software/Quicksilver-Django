@@ -1,0 +1,9 @@
+The Quicksilver task "{{ task.command }}" has been overdue since {{ scheduled }}.
+
+Please review the status of this task on {{ host }}:
+
+    https://{{ host }}/admin/quicksilver/task/{{ task.pk }}/change/
+
+Thank you,
+
+- Quicksilver Task Queue

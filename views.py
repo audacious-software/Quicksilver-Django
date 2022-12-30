@@ -31,16 +31,14 @@ def quicksilver_status(request): # pylint: disable=unused-argument
                             'outlier_threshold': outlier_threshold,
                             'overdue': delta_seconds
                         })
-
-                        if overdue.should_alert():
-                            overdue.alert()
-        elif overdue.should_alert():
-            overdue.alert()
         elif overdue.executions.all().count() < 2:
             issues.append({
                 'task': str(overdue),
                 'issue': 'Only %d runs recorded.' % overdue.executions.all().count()
             })
+
+        if overdue.should_alert():
+            overdue.alert()
 
     payload = {
         'issues': issues,

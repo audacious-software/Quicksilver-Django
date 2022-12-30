@@ -80,8 +80,10 @@ class Task(models.Model):
 
         return None
 
-    def should_alert(self):
-        if self.postpone_alert_until is not None and timezone.now() < self.postpone_alert_until:
+    def should_alert(self): # pylint: disable=too-many-return-statements,too-many-branches
+        now = timezone.now()
+
+        if self.postpone_alert_until is not None and now < self.postpone_alert_until:
             return False
 
         open_execution = self.executions.filter(ended=None).order_by('started').first()
@@ -112,10 +114,25 @@ class Task(models.Model):
                     return True
             except AttributeError:
                 pass
+        elif self.next_run is not None and self.next_run < now:
+            other_tasks = Task.objects.filter(queue=self.queue).exclude(pk=self.pk)
+
+            others_running = False
+
+            for task in other_tasks:
+                if task.is_running():
+                    others_running = True
+
+            if others_running is False:
+                return True
 
         return False
 
-    def alert(self):
+    def alert(self): # pylint: disable=too-many-locals
+        now = timezone.now()
+
+        alerted = False
+
         runtimes = []
 
         for execution in self.executions.exclude(ended=None):
@@ -134,24 +151,43 @@ class Task(models.Model):
 
         open_execution = self.executions.filter(ended=None).order_by('started').first()
 
-        if open_execution is not None and open_execution.runtime() > 10:
+        if open_execution is not None:
+            if open_execution.runtime() > 10:
+                context = {
+                    'task': self,
+                    'execution': open_execution,
+                    'runtime_mean': runtime_mean,
+                    'runtime_std': runtime_std,
+                    'host': host,
+                    'completed': self.executions.exclude(ended=None).count()
+                }
+
+                message = render_to_string('quicksilver_task_alert_message.txt', context)
+                subject = render_to_string('quicksilver_task_alert_subject.txt', context)
+
+                from_addr = 'quicksilver@' + host
+
+                email = EmailMessage(subject, message, from_addr, admins, headers={'Reply-To': admins[0]})
+                email.send()
+
+                alerted = True
+        elif self.next_run is not None and self.next_run < now:
             context = {
                 'task': self,
-                'execution': open_execution,
-                'runtime_mean': runtime_mean,
-                'runtime_std': runtime_std,
-                'host': host,
-                'completed': self.executions.exclude(ended=None).count()
+                'scheduled': self.next_run,
             }
 
-            message = render_to_string('quicksilver_task_alert_message.txt', context)
-            subject = render_to_string('quicksilver_task_alert_subject.txt', context)
+            message = render_to_string('quicksilver_task_overdue_alert_message.txt', context)
+            subject = render_to_string('quicksilver_task_overdue_alert_subject.txt', context)
 
             from_addr = 'quicksilver@' + host
 
             email = EmailMessage(subject, message, from_addr, admins, headers={'Reply-To': admins[0]})
             email.send()
 
+            alerted = True
+
+        if alerted:
             postpone_interval = 15 * 60
 
             try:
