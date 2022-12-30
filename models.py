@@ -174,6 +174,7 @@ class Task(models.Model):
         elif self.next_run is not None and self.next_run < now:
             context = {
                 'task': self,
+                'host': host,
                 'scheduled': self.next_run,
             }
 
