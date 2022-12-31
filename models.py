@@ -114,17 +114,25 @@ class Task(models.Model):
                     return True
             except AttributeError:
                 pass
-        elif self.next_run is not None and self.next_run < now:
-            other_tasks = Task.objects.filter(queue=self.queue).exclude(pk=self.pk)
+        elif self.next_run is not None:
+            overdue_seconds = 120
 
-            others_running = False
+            try:
+                extra_overdue_seconds = settings.QUICKSILVER_MIN_TASK_ALERT_OVERDUE_SECONDS
+            except AttributeError:
+                pass
 
-            for task in other_tasks:
-                if task.is_running():
-                    others_running = True
+            if (self.next_run + datetime.timedelta(seconds=extra_overdue_seconds)) < now:
+                other_tasks = Task.objects.filter(queue=self.queue).exclude(pk=self.pk)
 
-            if others_running is False:
-                return True
+                others_running = False
+
+                for task in other_tasks:
+                    if task.is_running():
+                        others_running = True
+
+                if others_running is False:
+                    return True
 
         return False
 
