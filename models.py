@@ -115,7 +115,7 @@ class Task(models.Model):
             except AttributeError:
                 pass
         elif self.next_run is not None:
-            overdue_seconds = 120
+            extra_overdue_seconds = 120
 
             try:
                 extra_overdue_seconds = settings.QUICKSILVER_MIN_TASK_ALERT_OVERDUE_SECONDS
