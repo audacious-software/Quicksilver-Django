@@ -26,11 +26,20 @@ def quicksilver_status(request): # pylint: disable=unused-argument
                     outlier_threshold = (overdue.repeat_interval * 2) + overdue.runtime_outlier_threshold()
 
                     if delta_seconds > outlier_threshold:
-                        issues.append({
-                            'task': str(overdue),
-                            'outlier_threshold': outlier_threshold,
-                            'overdue': delta_seconds
-                        })
+                        other_tasks = Task.objects.filter(queue=overdue.queue).exclude(pk=overdue.pk)
+
+                        others_running = False
+
+                        for task in other_tasks:
+                            if task.is_running():
+                                others_running = True
+
+                        if others_running is False:
+                            issues.append({
+                                'task': str(overdue),
+                                'outlier_threshold': outlier_threshold,
+                                'overdue': delta_seconds
+                            })
         elif overdue.executions.all().count() < 2:
             issues.append({
                 'task': str(overdue),
