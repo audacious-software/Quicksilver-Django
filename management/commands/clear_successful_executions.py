@@ -22,7 +22,7 @@ class Command(BaseCommand):
     @handle_lock
     @handle_schedule
     def handle(self, *args, **options):
-        before = timezone.now() - datetime.timedelta(seconds=(60 * options['before_minutes']))
+        before = timezone.now() - datetime.timedelta(seconds=(60 * options['before_minutes'])) # pylint: disable=superfluous-parens
 
         if int(options['verbosity']) > 1:
             print(before.isoformat() + ' -- ' + str(options['before_minutes']) + ' -- ' + str(options['verbosity']))

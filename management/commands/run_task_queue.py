@@ -23,7 +23,7 @@ class Command(BaseCommand):
     @handle_lock
     def handle(self, *args, **options):
         try:
-            when_stop = timezone.now() + datetime.timedelta(seconds=(options.get('restart_after') * 60))
+            when_stop = timezone.now() + datetime.timedelta(seconds=(options.get('restart_after') * 60)) # pylint: disable=superfluous-parens
 
             cycle_sleep = 5
 
