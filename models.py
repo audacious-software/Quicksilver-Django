@@ -20,6 +20,7 @@ from django.core.checks import Warning, register # pylint: disable=redefined-bui
 from django.core.mail import EmailMessage
 from django.core.management import call_command
 from django.db import models
+from django.db.utils import ProgrammingError
 from django.template.loader import render_to_string
 from django.utils import timezone
 
@@ -34,27 +35,31 @@ RUN_STATUSES = (
 def check_all_quicksilver_tasks_installed(app_configs, **kwargs): # pylint: disable=unused-argument, invalid-name
     errors = []
 
-    if 'quicksilver.W001' in settings.SILENCED_SYSTEM_CHECKS:
-        return errors
+    try:
+        if 'quicksilver.W001' in settings.SILENCED_SYSTEM_CHECKS:
+            return errors
 
-    for app in settings.INSTALLED_APPS:
-        try:
-            app_module = importlib.import_module('.quicksilver_api', package=app)
+        for app in settings.INSTALLED_APPS:
+            try:
+                app_module = importlib.import_module('.quicksilver_api', package=app)
 
-            custom_tasks = app_module.quicksilver_tasks()
+                custom_tasks = app_module.quicksilver_tasks()
 
-            for task in custom_tasks:
-                if Task.objects.filter(command=task[0]).count() == 0:
-                    warning_id = 'quicksilver.%s.%s.W001' % (app, task[0])
+                for task in custom_tasks:
+                    if Task.objects.filter(command=task[0]).count() == 0:
+                        warning_id = 'quicksilver.%s.%s.W001' % (app, task[0])
 
-                    if (warning_id in settings.SILENCED_SYSTEM_CHECKS) is False:
-                        warning = Warning('Quicksilver task "%s.%s" is not installed' % (app, task[0]), hint='Run "install_quicksilver_tasks" command to install or add "%s" to SILENCED_SYSTEM_CHECKS.' % warning_id, obj=None, id=warning_id) # pylint: disable=consider-using-f-string
+                        if (warning_id in settings.SILENCED_SYSTEM_CHECKS) is False:
+                            warning = Warning('Quicksilver task "%s.%s" is not installed' % (app, task[0]), hint='Run "install_quicksilver_tasks" command to install or add "%s" to SILENCED_SYSTEM_CHECKS.' % warning_id, obj=None, id=warning_id) # pylint: disable=consider-using-f-string
 
-                        errors.append(warning)
-        except ImportError:
-            pass
-        except AttributeError:
-            pass
+                            errors.append(warning)
+            except ImportError:
+                pass
+            except AttributeError:
+                pass
+
+    except ProgrammingError: # Tables not yet created
+        pass
 
     return errors
 
