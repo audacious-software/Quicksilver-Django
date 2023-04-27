@@ -4,6 +4,7 @@
 from __future__ import print_function
 
 import datetime
+import importlib
 import io
 import sys
 import traceback
@@ -13,7 +14,9 @@ import numpy
 
 from six import python_2_unicode_compatible
 
+
 from django.conf import settings
+from django.core.checks import Warning, register # pylint: disable=redefined-builtin
 from django.core.mail import EmailMessage
 from django.core.management import call_command
 from django.db import models
@@ -26,6 +29,35 @@ RUN_STATUSES = (
     ('pending', 'Pending',),
     ('ongoing', 'Ongoing',),
 )
+
+@register()
+def check_all_quicksilver_tasks_installed(app_configs, **kwargs): # pylint: disable=unused-argument, invalid-name
+    errors = []
+
+    if 'quicksilver.W001' in settings.SILENCED_SYSTEM_CHECKS:
+        return errors
+
+    for app in settings.INSTALLED_APPS:
+        try:
+            app_module = importlib.import_module('.quicksilver_api', package=app)
+
+            custom_tasks = app_module.quicksilver_tasks()
+
+            for task in custom_tasks:
+                if Task.objects.filter(command=task[0]).count() == 0:
+                    warning_id = 'quicksilver.%s.%s.W001' % (app, task[0])
+
+                    if (warning_id in settings.SILENCED_SYSTEM_CHECKS) is False:
+                        warning = Warning('Quicksilver task "%s.%s" is not installed' % (app, task[0]), hint='Run "install_quicksilver_tasks" command to install or add "%s" to SILENCED_SYSTEM_CHECKS.' % warning_id, obj=None, id=warning_id) # pylint: disable=consider-using-f-string
+
+                        errors.append(warning)
+        except ImportError:
+            pass
+        except AttributeError:
+            pass
+
+    return errors
+
 
 class PermissionsSupport(models.Model): # pylint: disable=old-style-class, no-init, too-few-public-methods
     class Meta: # pylint: disable=too-few-public-methods, old-style-class, no-init
