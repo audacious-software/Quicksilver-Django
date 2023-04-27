@@ -40,12 +40,14 @@ jobs:
           command: |
             python3 -m venv --copies /home/circleci/venv
             . /home/circleci/venv/bin/activate
+            pip install -U pip
+            pip install wheel
             pip install -r requirements.txt --progress-bar off
             cd ..
             mv project quicksilver
             mkdir django
             cd django
-            django-admin.py startproject qs
+            django-admin startproject qs
             mv ../quicksilver qs
             cd qs
             cp quicksilver/circle_settings.py qs/settings.py
@@ -92,12 +94,14 @@ jobs:
           command: |
             python3 -m venv --copies /home/circleci/venv
             . /home/circleci/venv/bin/activate
+            pip install -U pip
+            pip install wheel
             pip install -r requirements.txt --progress-bar off
             cd ..
             mv project quicksilver
             mkdir django
             cd django
-            django-admin.py startproject qs
+            django-admin startproject qs
             mv ../quicksilver qs
             cd qs
             cp quicksilver/circle_settings.py qs/settings.py
@@ -144,12 +148,14 @@ jobs:
           command: |
             python3 -m venv --copies /home/circleci/venv
             . /home/circleci/venv/bin/activate
+            pip install -U pip
+            pip install wheel
             pip install -r requirements.txt --progress-bar off
             cd ..
             mv project quicksilver
             mkdir django
             cd django
-            django-admin.py startproject qs
+            django-admin startproject qs
             mv ../quicksilver qs
             cd qs
             cp quicksilver/circle_settings.py qs/settings.py
@@ -196,6 +202,8 @@ jobs:
           command: |
             virtualenv --copies /home/circleci/venv
             . /home/circleci/venv/bin/activate
+            pip install -U pip
+            pip install wheel
             pip install -r requirements.txt --progress-bar off
             cd ..
             mv project quicksilver
