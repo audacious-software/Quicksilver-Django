@@ -20,7 +20,7 @@ from django.core.checks import Warning, register # pylint: disable=redefined-bui
 from django.core.mail import EmailMessage
 from django.core.management import call_command
 from django.db import models
-from django.db.utils import ProgrammingError
+from django.db.utils import ProgrammingError, OperationalError
 from django.template.loader import render_to_string
 from django.utils import timezone
 
@@ -35,7 +35,7 @@ RUN_STATUSES = (
 def check_all_quicksilver_tasks_installed(app_configs, **kwargs): # pylint: disable=unused-argument, invalid-name
     errors = []
 
-    try:
+    try: # pylint: disable=too-many-nested-blocks
         if 'quicksilver.W001' in settings.SILENCED_SYSTEM_CHECKS:
             return errors
 
@@ -59,6 +59,8 @@ def check_all_quicksilver_tasks_installed(app_configs, **kwargs): # pylint: disa
                 pass
 
     except ProgrammingError: # Tables not yet created
+        pass
+    except OperationalError: # Tables not yet created
         pass
 
     return errors
