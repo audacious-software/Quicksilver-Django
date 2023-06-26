@@ -267,7 +267,7 @@ class Task(models.Model):
             self.save()
 
     def get_max_duration(self):
-        max_duration = self.task.max_duration
+        max_duration = self.max_duration
 
         if max_duration is None:
             try:
