@@ -1,0 +1,9 @@
+The Quicksilver task "{{ execution.task.command }}" was killed for running too long ({{ run_duration }} > {{ max_duration }}).
+
+Please review the status of this execution on {{ host }}:
+
+    https://{{ host }}/admin/quicksilver/execution/{{ execution.pk }}/change/
+
+Thank you,
+
+- Quicksilver Task Queue

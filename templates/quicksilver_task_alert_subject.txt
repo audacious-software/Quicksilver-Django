@@ -1,1 +1,1 @@
-[Quicksilver / {{ host }}]: {{ task.command }} exceeding normal runtime
+[Quicksilver-A001 / {{ host }}]: {{ task.command }} exceeding normal runtime
