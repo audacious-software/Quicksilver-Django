@@ -36,12 +36,12 @@ RUN_STATUSES = (
 class ExecutionTimeoutError(Exception):
     pass
 
-class ExecutionTimeout:
+class ExecutionTimeout: # pylint: disable=old-style-class
     def __init__(self, seconds=1, error_message='Timeout'):
         self.seconds = seconds
         self.error_message = error_message
 
-    def handle_timeout(self, signum, frame):
+    def handle_timeout(self, signum, frame): # pylint: disable=unused-argument
         raise ExecutionTimeoutError(self.error_message)
 
     def __enter__(self):
@@ -379,8 +379,8 @@ class Execution(models.Model):
                 message = render_to_string('quicksilver_execution_killed_message.txt', context)
                 subject = render_to_string('quicksilver_execution_killed_subject.txt', context)
 
-                from_addr = 'quicksilver@' + host
                 host = settings.ALLOWED_HOSTS[0]
+                from_addr = 'quicksilver@' + host
                 admins = [admin[1] for admin in settings.ADMINS]
 
                 email = EmailMessage(subject, message, from_addr, admins, headers={'Reply-To': admins[0]})
