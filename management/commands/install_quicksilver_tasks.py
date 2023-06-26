@@ -21,9 +21,9 @@ class Command(BaseCommand):
 
         for app in settings.INSTALLED_APPS:
             try:
-                dialog_module = importlib.import_module('.quicksilver_api', package=app)
+                app_module = importlib.import_module('.quicksilver_api', package=app)
 
-                custom_tasks = dialog_module.quicksilver_tasks()
+                custom_tasks = app_module.quicksilver_tasks()
 
                 tasks.extend(custom_tasks)
             except ImportError:
