@@ -57,12 +57,12 @@ def handle_schedule(handle):
 # Default behavior is to never wait for the lock to be available (fail fast)
 LOCK_WAIT_TIMEOUT = getattr(settings, "DEFAULT_LOCK_WAIT_TIMEOUT", -1)
 
-def handle_lock(handle):
+def handle_lock(handle): # pylint: disable=too-many-statements
     """
     Decorate the handle method with a file lock to ensure there is only ever
     one process running at any one time.
     """
-    def wrapper(self, *args, **options):
+    def wrapper(self, *args, **options): # pylint: disable=too-many-statements
         lock_prefix = ''
 
         try:
