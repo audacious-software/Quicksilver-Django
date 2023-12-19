@@ -2,6 +2,7 @@ from __future__ import print_function
 # pylint: disable=pointless-string-statement, line-too-long
 
 import logging
+import os
 import tempfile
 import time
 import traceback
@@ -109,13 +110,15 @@ def handle_lock(handle):
         try:
             lock.acquire(LOCK_WAIT_TIMEOUT)
         except AlreadyLocked:
-            logging.debug("lock already in place. quitting.")
+            logging.debug("Lock already in place. Quitting.")
             return
         except LockTimeout:
             logging.debug("waiting for the lock timed out. quitting.")
             return
 
-        logging.debug("acquired.")
+        logging.debug("Acquired.")
+
+        options['__qs_lock_filename'] = lock_filename
 
         try:
             handle(self, *args, **options)
@@ -133,3 +136,9 @@ def handle_lock(handle):
         return
 
     return wrapper
+
+def touch_lock(options):
+    lock_filename = options['__qs_lock_filename']
+
+    if os.path.exists(lock_filename):
+        os.utime(lock_filename, None)
