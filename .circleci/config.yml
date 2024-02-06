@@ -14,7 +14,7 @@ workflows:
       - build-27
 
 jobs:
-  build-39:
+  build-310:
     docker:
       - image: cimg/python:3.10
       - image: cimg/postgres:9.6-postgis
