@@ -15,7 +15,6 @@ import numpy
 
 from six import python_2_unicode_compatible
 
-
 from django.conf import settings
 from django.core.checks import Warning, register # pylint: disable=redefined-builtin
 from django.core.mail import EmailMessage
