@@ -51,11 +51,11 @@ This housecleaning job is configured run every 15 minutes.
 
 So, while a command is job encapsulated by the standard Django management command framework, with some Quicksilver-specific annotations, a *task* is an object that resides in the database and is used to specify how the command should be run.
 
--- TASK IMAGE --
+![Quicksilver task example](documentation/images/task.png)
 
 Aside from the command itself, the most important part of a task is its *repeat interval* which is how many seconds must elapse before it should run again. In the case of `clear_successful_executions` 900 seconds (15 minutes) is a pretty standard interval. Additional arguments can be passed to the command to modfy how it runs, and the task keeps track of the next time the command is scheduled to run, as well as how long to postpone any alerts (more on these below) should a command take longer than expected to run.
 
--- executions image --
+![List of successful executions](documentation/images/executions.png)
 
 When a task becomes due to run a command, Quicksilver encapsulates this in an *execution*. An execution has a start time, and end time (may be empty if still running or is stuck) and a status. Statuses may be one of:
 
@@ -123,6 +123,12 @@ WARNINGS:
 ?: (quicksilver.simple_messaging_dialog_support.simple_messaging_send_pending_messages.W001) Quicksilver task "simple_messaging_dialog_support.simple_messaging_send_pending_messages" is not installed
 	HINT: Run "install_quicksilver_tasks" command to install or add "quicksilver.simple_messaging_dialog_support.simple_messaging_send_pending_messages.W001" to SILENCED_SYSTEM_CHECKS.
 ```
+
+
+## Questions?
+
+If you have any questions or need assistance, please e-mail [chris@audacious-softare.com](mailto:chris@audacious-software.com). This is still a project under active development (despite over 4 years of production deployments), so there will still be rough spots.
+
 
 ## License and Other Project Information
 
