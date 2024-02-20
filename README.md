@@ -130,7 +130,7 @@ WARNINGS:
 
 ## Questions?
 
-If you have any questions or need assistance, please e-mail [chris@audacious-softare.com](mailto:chris@audacious-software.com). This is still a project under active development (despite over 4 years of production deployments), so there will still be rough spots.
+If you have any questions or need assistance, please e-mail [chris@audacious-softare.com](mailto:chris@audacious-software.com). This is still a project under active development (despite over four years of production deployments), so there will still be rough spots.
 
 
 ## License and Other Project Information
