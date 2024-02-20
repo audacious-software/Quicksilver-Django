@@ -72,6 +72,28 @@ In the event of an error or other problem, Quicksilver attempts to log details o
 
 As commands are running, the Quicksilver system itself can be configured with external monitoring systems to detect when particular executions are taking longer than expected. This is defined as two standard deviations from the average of all the observed successful runs on the system. If such an outlier is detected, the local Django administrators (defined in `settings.ADMINS`) will receive an alert e-mail about the long-running job so that an investigation can begin if needed. After sending the alert, Quicksilver will set a window during which no more alert e-mails will be transmitted, in order to avoid flooding administrator inboxes with alerts.
 
+## Installing Quicksilver
+
+To install Quicksilver, clone this repository into your existing Django project:
+
+```
+$ git clone https://github.com/audacious-software/Quicksilver-Django.git quicksilver
+```
+
+Add `quicksilver` to `settings.INSTALLED_APPS`. 
+
+Optionally, add Quicksilver to your project's `urls.py` file:
+
+```
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    url('^accounts/', include('django.contrib.auth.urls')),
+    ...
+    url(r'^quicksilver/', include('quicksilver.urls')),
+]
+```
+
+This will enable support for third party monitoring systems to periodically poll for any issues on the local `/quicksilver/status` HTTP endpoint.
 
 ## Running Quicksilver from CRON
 
