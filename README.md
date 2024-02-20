@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/audacious-software/Quicksilver-Django.svg?style=svg)](https://circleci.com/gh/audacious-software/Quicksilver-Django)
 
 
-Quicksilver is a sub-minute task scheduler designed to complement and improve upon CRON-based scheduling for running background processes. It was originally developed to provide "nudges" every couple of seconds (as opposed to no more frequently than once a minute with vanilla CRON) to conversational state machines provided by the [Django Dialog Engine](https://github.com/audacious-software/Django-Dialog-Engine) project. It quickly became a more generalized task dispatch system, and is in use across a variety of Audacious Software (and adjacent) projects.
+Quicksilver is a sub-minute task scheduler designed to complement and improve upon CRON-based scheduling for running background processes. It was originally developed to provide "nudges" every couple of seconds (as opposed to no more frequently than once a minute with vanilla CRON) to conversational state machines provided by the [Django Dialog Engine](https://github.com/audacious-software/Django-Dialog-Engine) project. It quickly became a more generalized task dispatch system, and is in use across a variety of [Audacious Software](https://github.com/audacious-software/) (and adjacent) projects.
 
 Quicksilver consists of three main types of primitives: *commands*, *tasks*, and *executions*.
 
