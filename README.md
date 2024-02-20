@@ -7,7 +7,7 @@ Quicksilver is a sub-minute task scheduler designed to complement and improve up
 
 Quicksilver consists of three main types of primitives: *commands*, *tasks*, and *executions*.
 
-A *command* consists of an annotated Django management command that exposes some additional arguments and returns some additional metadata when run. The [`clear_successful_executions`](/management/commands/clear_successful_executions.py) managament command respsonsible for doing housekeeping within Quicksilver is an ideal example:
+A *command* consists of an annotated Django management command that exposes some additional arguments and returns some additional metadata when run. The [`clear_successful_executions`](/management/commands/clear_successful_executions.py) management command responsible for doing housekeeping within Quicksilver is an ideal example:
 
 ```python
 # pylint: disable=no-member, line-too-long
@@ -44,7 +44,7 @@ class Command(BaseCommand):
             print('Cleared ' + str(deleted) + ' task execution record(s).')
 ```
 
-When run, this command inspects the log of Quicksilver executions (more on these below) and deletes from the database all successful executions older than a certain date. Executions that did not successfuly exit - or are still ongoing - are left on the system for diagnostic purposes.
+When run, this command inspects the log of Quicksilver executions (more on these below) and deletes from the database all successful executions older than a certain date. Executions that did not successfully exit - or are still ongoing - are left on the system for diagnostic purposes.
 
 This fairly-standard Django management command only differs from others in that the `add_arguments` method is annotated with `@add_qs_arguments` and the standard `handle` method is annotated with `@handle_lock` and `@handle_schedule`.
 
@@ -56,7 +56,7 @@ So, while a command is job encapsulated by the standard Django management comman
 
 ![Quicksilver task example](documentation/images/task.png)
 
-Aside from the command itself, the most important part of a task is its *repeat interval* which is how many seconds must elapse before it should run again. In the case of `clear_successful_executions` 900 seconds (15 minutes) is a pretty standard interval. Additional arguments can be passed to the command to modfy how it runs, and the task keeps track of the next time the command is scheduled to run, as well as how long to postpone any alerts (more on these below) should a command take longer than expected to run.
+Aside from the command itself, the most important part of a task is its *repeat interval* which is how many seconds must elapse before it should run again. In the case of `clear_successful_executions` 900 seconds (15 minutes) is a pretty standard interval. Additional arguments can be passed to the command to modify how it runs, and the task keeps track of the next time the command is scheduled to run, as well as how long to postpone any alerts (more on these below) should a command take longer than expected to run.
 
 ![List of successful executions](documentation/images/executions.png)
 
@@ -101,7 +101,7 @@ def quicksilver_tasks():
     ]
 ```
 
-This function simply returns a list of Python tuples definining the tasks you'd like created. The first item in the tuple (e.g. `my_new_command`) is the name of the command to run. The second item in the tuple is a string of command line arguments that should be passed when run. (This string may be empty.) The third item in the tuple is the repeat interval (in seconds) defining how often the job should run. The optional fourth item is the name of the process managing the jobs. For long-running jobs like backups and data exports, it's often very helpful to run these jobs in their own dedicated processes so that a healthy long-running task does not block other jobs from running.
+This function simply returns a list of Python tuples defining the tasks you'd like created. The first item in the tuple (e.g. `my_new_command`) is the name of the command to run. The second item in the tuple is a string of command line arguments that should be passed when run. (This string may be empty.) The third item in the tuple is the repeat interval (in seconds) defining how often the job should run. The optional fourth item is the name of the process managing the jobs. For long-running jobs like backups and data exports, it's often very helpful to run these jobs in their own dedicated processes so that a healthy long-running task does not block other jobs from running.
 
 After implementing `quicksilver_tasks` in your app's `quicksilver_api.py` file, run the `install_quicksilver_tasks` management command and Quicksilver will inspect your Django project's packages for any Quicksilver tasks to install. If any are found, it will add them to your site for scheduling:
 
