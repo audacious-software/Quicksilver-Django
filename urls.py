@@ -1,9 +1,9 @@
 # pylint: disable=line-too-long
 
-from django.conf.urls import url
+from django.urls import re_path
 
 from .views import quicksilver_status
 
 urlpatterns = [
-    url(r'^status$', quicksilver_status, name='quicksilver_status'),
+    re_path(r'^status$', quicksilver_status, name='quicksilver_status'),
 ]
