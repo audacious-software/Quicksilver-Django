@@ -2,6 +2,7 @@ from __future__ import print_function
 # pylint: disable=pointless-string-statement, line-too-long
 
 import logging
+import os
 import tempfile
 import time
 import traceback
@@ -56,12 +57,12 @@ def handle_schedule(handle):
 # Default behavior is to never wait for the lock to be available (fail fast)
 LOCK_WAIT_TIMEOUT = getattr(settings, "DEFAULT_LOCK_WAIT_TIMEOUT", -1)
 
-def handle_lock(handle):
+def handle_lock(handle): # pylint: disable=too-many-statements
     """
     Decorate the handle method with a file lock to ensure there is only ever
     one process running at any one time.
     """
-    def wrapper(self, *args, **options):
+    def wrapper(self, *args, **options): # pylint: disable=too-many-statements
         lock_prefix = ''
 
         try:
@@ -117,6 +118,8 @@ def handle_lock(handle):
 
         logging.debug("Acquired.")
 
+        options['__qs_lock_filename'] = lock_filename
+
         try:
             handle(self, *args, **options)
         except: # pylint: disable=bare-except
@@ -134,3 +137,9 @@ def handle_lock(handle):
         return
 
     return wrapper
+
+def touch_lock(options):
+    lock_filename = options['__qs_lock_filename']
+
+    if os.path.exists(lock_filename):
+        os.utime(lock_filename, None)
