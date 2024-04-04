@@ -4,7 +4,9 @@
 from __future__ import print_function
 
 import datetime
+import importlib
 import io
+import signal
 import sys
 import traceback
 
@@ -14,18 +16,73 @@ import numpy
 from six import python_2_unicode_compatible
 
 from django.conf import settings
+from django.core.checks import Warning, register # pylint: disable=redefined-builtin
 from django.core.mail import EmailMessage
 from django.core.management import call_command
 from django.db import models
+from django.db.utils import ProgrammingError, OperationalError
 from django.template.loader import render_to_string
 from django.utils import timezone
 
 RUN_STATUSES = (
     ('success', 'Successful',),
     ('error', 'Error',),
+    ('killed', 'Killed (Stuck)',),
     ('pending', 'Pending',),
     ('ongoing', 'Ongoing',),
 )
+
+class ExecutionTimeoutError(Exception):
+    pass
+
+class ExecutionTimeout: # pylint: disable=old-style-class
+    def __init__(self, seconds=1, error_message='Timeout'):
+        self.seconds = seconds
+        self.error_message = error_message
+
+    def handle_timeout(self, signum, frame): # pylint: disable=unused-argument
+        raise ExecutionTimeoutError(self.error_message)
+
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.handle_timeout)
+        signal.alarm(self.seconds)
+
+    def __exit__(self, type, value, traceback): # pylint: disable=redefined-builtin, redefined-outer-name
+        signal.alarm(0)
+
+@register()
+def check_all_quicksilver_tasks_installed(app_configs, **kwargs): # pylint: disable=unused-argument, invalid-name
+    errors = []
+
+    try: # pylint: disable=too-many-nested-blocks
+        if 'quicksilver.W001' in settings.SILENCED_SYSTEM_CHECKS:
+            return errors
+
+        for app in settings.INSTALLED_APPS:
+            try:
+                app_module = importlib.import_module('.quicksilver_api', package=app)
+
+                custom_tasks = app_module.quicksilver_tasks()
+
+                for task in custom_tasks:
+                    if Task.objects.filter(command=task[0]).count() == 0:
+                        warning_id = 'quicksilver.%s.%s.W001' % (app, task[0])
+
+                        if (warning_id in settings.SILENCED_SYSTEM_CHECKS) is False:
+                            warning = Warning('Quicksilver task "%s.%s" is not installed' % (app, task[0]), hint='Run "install_quicksilver_tasks" command to install or add "%s" to SILENCED_SYSTEM_CHECKS.' % warning_id, obj=None, id=warning_id) # pylint: disable=consider-using-f-string
+
+                            errors.append(warning)
+            except ImportError:
+                pass
+            except AttributeError:
+                pass
+
+    except ProgrammingError: # Tables not yet created
+        pass
+    except OperationalError: # Tables not yet created
+        pass
+
+    return errors
 
 class PermissionsSupport(models.Model): # pylint: disable=old-style-class, no-init, too-few-public-methods
     class Meta: # pylint: disable=too-few-public-methods, old-style-class, no-init
@@ -50,6 +107,7 @@ class Task(models.Model):
     queue = models.CharField(max_length=128, default='default')
 
     repeat_interval = models.IntegerField(default=0)
+    max_duration = models.IntegerField(null=True, blank=True)
 
     next_run = models.DateTimeField(null=True, blank=True)
 
@@ -207,6 +265,17 @@ class Task(models.Model):
             self.postpone_alert_until = now + datetime.timedelta(seconds=postpone_interval)
             self.save()
 
+    def get_max_duration(self):
+        max_duration = self.max_duration
+
+        if max_duration is None:
+            try:
+                max_duration = settings.QUICKSILVER_MAX_TASK_DURATION_SECONDS
+            except AttributeError:
+                pass
+
+        return max_duration
+
 @python_2_unicode_compatible
 class Execution(models.Model):
     task = models.ForeignKey(Task, related_name='executions', on_delete=models.CASCADE)
@@ -240,11 +309,23 @@ class Execution(models.Model):
             if interval < 1:
                 interval = 5
 
-            call_command(self.task.command, *args, _qs_context=True, _qs_next_interval=interval)
+            max_duration = self.task.get_max_duration()
+
+            if max_duration is not None:
+                try:
+                    with ExecutionTimeout(seconds=max_duration):
+                        call_command(self.task.command, *args, _qs_context=True, _qs_next_interval=interval)
+                except ExecutionTimeoutError:
+                    traceback.print_exc(None, qs_out)
+
+                    self.kill_if_stuck()
+            else:
+                call_command(self.task.command, *args, _qs_context=True, _qs_next_interval=interval)
 
             sys.stdout = orig_stdout
 
-            self.status = 'success'
+            if self.status == 'ongoing':
+                self.status = 'success'
         except: # pylint: disable=bare-except
             traceback.print_exc(None, qs_out)
             self.status = 'error'
@@ -274,3 +355,36 @@ class Execution(models.Model):
             return (self.ended - self.started).total_seconds()
 
         return (timezone.now() - self.started).total_seconds()
+
+    def kill_if_stuck(self):
+        if self.ended is not None:
+            return False
+
+        max_duration = self.task.get_max_duration()
+        run_duration = self.runtime()
+
+        if max_duration is not None and run_duration is not None:
+            if run_duration > max_duration:
+                self.status = 'killed'
+                self.ended = timezone.now()
+                self.save()
+
+                context = {
+                    'execution': self,
+                    'max_duration': max_duration,
+                    'run_duration': run_duration
+                }
+
+                message = render_to_string('quicksilver_execution_killed_message.txt', context)
+                subject = render_to_string('quicksilver_execution_killed_subject.txt', context)
+
+                host = settings.ALLOWED_HOSTS[0]
+                from_addr = 'quicksilver@' + host
+                admins = [admin[1] for admin in settings.ADMINS]
+
+                email = EmailMessage(subject, message, from_addr, admins, headers={'Reply-To': admins[0]})
+                email.send()
+
+                return True
+
+        return False

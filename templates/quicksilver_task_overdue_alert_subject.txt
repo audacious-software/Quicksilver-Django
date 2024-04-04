@@ -1,1 +1,1 @@
-[Quicksilver / {{ host }}]: {{ task.command }} overdue since {{ scheduled }}
+[Quicksilver-O001 / {{ host }}]: {{ task.command }} overdue since {{ scheduled }}
