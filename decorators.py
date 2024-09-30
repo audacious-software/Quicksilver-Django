@@ -132,7 +132,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         lock.release()
         logging.debug("Released.")
 
-        logging.info("Done in %.2f seconds", (time.time() - start_time))
+        logging.debug("Done in %.2f seconds", (time.time() - start_time))
 
         return
 
