@@ -6,6 +6,7 @@ from __future__ import print_function
 import datetime
 import importlib
 import io
+import logging
 import signal
 import sys
 import traceback
@@ -31,6 +32,8 @@ RUN_STATUSES = (
     ('pending', 'Pending',),
     ('ongoing', 'Ongoing',),
 )
+
+logger = logging.getLogger(__name__)
 
 class ExecutionTimeoutError(Exception):
     pass
@@ -341,7 +344,7 @@ class Execution(models.Model):
 
             self.save()
         else:
-            print('Task not Quicksilver-enabled: ' + str(self.task))
+            logger.error('Task not Quicksilver-enabled: %s', self.task)
 
     def runtime(self):
         if self.started is None:

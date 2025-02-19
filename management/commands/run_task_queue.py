@@ -3,6 +3,7 @@ from __future__ import print_function
 # -*- coding: utf-8 -*-
 
 import datetime
+import logging
 import time
 
 from django.conf import settings
@@ -11,6 +12,8 @@ from django.utils import timezone
 
 from ...decorators import handle_lock
 from ...models import Task
+
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = 'Starts Quicksilver execution process.'
@@ -60,4 +63,4 @@ class Command(BaseCommand):
                     time.sleep(cycle_sleep)
 
         except KeyboardInterrupt:
-            print('Exiting queue "' + options.get('task_queue') + '" due to keyboard interruption...')
+            logger.info('Exiting queue "%s" due to keyboard interruption...', options.get('task_queue'))
