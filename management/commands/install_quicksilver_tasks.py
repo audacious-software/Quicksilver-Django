@@ -39,4 +39,4 @@ class Command(BaseCommand):
                     task_obj.queue = task[3]
                     task_obj.save()
 
-                print('Installed %s...' % task)
+                print('Installed %s...' % str(task))
