@@ -33,7 +33,7 @@ RUN_STATUSES = (
     ('ongoing', 'Ongoing',),
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 class ExecutionTimeoutError(Exception):
     pass

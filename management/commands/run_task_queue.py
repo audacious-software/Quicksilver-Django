@@ -13,7 +13,7 @@ from django.utils import timezone
 from ...decorators import handle_lock
 from ...models import Task
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 class Command(BaseCommand):
     help = 'Starts Quicksilver execution process.'
