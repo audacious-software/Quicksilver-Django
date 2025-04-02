@@ -16,12 +16,15 @@ A *command* consists of an annotated Django management command that exposes some
 from __future__ import print_function
 
 import datetime
+import logging
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from ...decorators import handle_lock, handle_schedule, add_qs_arguments
 from ...models import Execution
+
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = 'Clears older Quicksilver successful task execution records.'
@@ -35,13 +38,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         before = timezone.now() - datetime.timedelta(seconds=(60 * options['before_minutes'])) # pylint: disable=superfluous-parens
 
-        if int(options['verbosity']) > 1:
-            print(before.isoformat() + ' -- ' + str(options['before_minutes']) + ' -- ' + str(options['verbosity']))
-
         deleted = Execution.objects.filter(ended__lte=before, status='success').delete()[0]
 
         if int(options['verbosity']) > 1:
-            print('Cleared ' + str(deleted) + ' task execution record(s).')
+            logging.info('Cleared %s task execution record(s).', deleted)
 ```
 
 When run, this command inspects the log of Quicksilver executions (more on these below) and deletes from the database all successful executions older than a certain date. Executions that did not successfully exit - or are still ongoing - are left on the system for diagnostic purposes.
@@ -80,7 +80,7 @@ To install Quicksilver, clone this repository into your existing Django project:
 $ git clone https://github.com/audacious-software/Quicksilver-Django.git quicksilver
 ```
 
-Add `quicksilver` to `settings.INSTALLED_APPS`. 
+Add `quicksilver` to `settings.INSTALLED_APPS`.
 
 Optionally, add Quicksilver to your project's `urls.py` file:
 

@@ -6,6 +6,7 @@ from __future__ import print_function
 import datetime
 import importlib
 import io
+import logging
 import signal
 import sys
 import traceback
@@ -31,6 +32,8 @@ RUN_STATUSES = (
     ('pending', 'Pending',),
     ('ongoing', 'Ongoing',),
 )
+
+logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 class ExecutionTimeoutError(Exception):
     pass
@@ -84,15 +87,6 @@ def check_all_quicksilver_tasks_installed(app_configs, **kwargs): # pylint: disa
 
     return errors
 
-class PermissionsSupport(models.Model): # pylint: disable=old-style-class, no-init, too-few-public-methods
-    class Meta: # pylint: disable=too-few-public-methods, old-style-class, no-init
-        managed = False
-        default_permissions = ()
-
-        permissions = (
-            ('access_module', 'Access Quicksilver components'),
-        )
-
 class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-methods, useless-object-inheritance
     def __init__(self): # pylint: disable=useless-super-delegation
         super(QuicksilverIO, self).__init__() # pylint: disable=super-with-arguments
@@ -102,6 +96,11 @@ class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-method
 
 @python_2_unicode_compatible
 class Task(models.Model):
+    class Meta: # pylint: disable=too-few-public-methods, old-style-class, no-init
+        permissions = (
+            ('access_module', 'Access Quicksilver components'),
+        )
+
     command = models.CharField(max_length=4096, db_index=True)
     arguments = models.TextField(max_length=1048576, help_text='One argument per line', null=True, blank=True)
     queue = models.CharField(max_length=128, default='default')
@@ -347,7 +346,7 @@ class Execution(models.Model):
 
             self.save()
         else:
-            print('Task not Quicksilver-enabled: ' + str(self.task))
+            logger.error('Task not Quicksilver-enabled: %s', self.task)
 
     def runtime(self):
         if self.ended is None:

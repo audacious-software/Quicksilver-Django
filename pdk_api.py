@@ -3,6 +3,7 @@ from __future__ import print_function
 import bz2
 import gc
 import io
+import logging
 import os
 import sys
 import tempfile
@@ -10,6 +11,8 @@ import tempfile
 from django.conf import settings
 from django.core import management
 from django.utils.text import slugify
+
+logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 def load_backup(filename, content):
     prefix = 'quicksilver_backup_' + settings.ALLOWED_HOSTS[0]
@@ -29,7 +32,7 @@ def load_backup(filename, content):
 
         os.remove(path)
     else:
-        print('[quicksilver.pdk_api.load_backup] Unknown file type: ' + filename)
+        logger.error('[quicksilver.pdk_api.load_backup] Unknown file type: %s', filename)
 
 def incremental_backup(parameters): # pylint: disable=too-many-locals, too-many-statements
     to_transmit = []
@@ -61,7 +64,7 @@ def incremental_backup(parameters): # pylint: disable=too-many-locals, too-many-
         pass
 
     for app in dumpdata_apps:
-        print('[quicksilver] Backing up ' + app + '...')
+        logger.info('[quicksilver] Backing up %s...', app)
         sys.stdout.flush()
 
         buf = io.StringIO()
