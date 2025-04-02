@@ -1,3 +1,4 @@
+# pylint: disable=no-member
 # -*- coding: utf-8 -*-
 
 from django.contrib import admin
@@ -31,11 +32,7 @@ class RuntimeFilter(admin.SimpleListFilter):
         ]
 
     def queryset(self, request, queryset):
-        print('self.value() = %s' % self.value())
-        print('queryset = %s' % queryset)
-
         if self.value() == '0_1':
-            print('less than minute return')
             return queryset.filter(total_runtime__lt=60)
 
         if self.value() == '1_5':
@@ -52,6 +49,8 @@ class RuntimeFilter(admin.SimpleListFilter):
 
         if self.value() == '60_':
             return queryset.filter(total_runtime__gte=3600)
+
+        return queryset
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
