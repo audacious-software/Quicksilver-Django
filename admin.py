@@ -31,7 +31,7 @@ class RuntimeFilter(admin.SimpleListFilter):
             ('60_', _('more than a full hour')),
         ]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request, queryset): # pylint: disable=too-many-return-statements
         if self.value() == '0_1':
             return queryset.filter(total_runtime__lt=60)
 
