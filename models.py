@@ -285,6 +285,8 @@ class Execution(models.Model):
     output = models.TextField(max_length=1048576, null=True, blank=True)
     status = models.CharField(max_length=64, choices=RUN_STATUSES, default='pending')
 
+    total_runtime = models.FloatField(null=True, blank=True, verbose_name='runtime')
+
     def __str__(self):
         return str(self.task)
 
@@ -348,13 +350,25 @@ class Execution(models.Model):
             print('Task not Quicksilver-enabled: ' + str(self.task))
 
     def runtime(self):
-        if self.started is None:
-            return None
+        if self.ended is None:
+            self.total_runtime = None
 
-        if self.ended is not None:
-            return (self.ended - self.started).total_seconds()
+        if self.total_runtime is None:
+            if self.started is None:
+                return None
 
-        return (timezone.now() - self.started).total_seconds()
+            if self.ended is not None:
+                self.total_runtime = (self.ended - self.started).total_seconds()
+                self.save()
+
+                return (self.ended - self.started).total_seconds()
+
+            self.total_runtime = (timezone.now() - self.started).total_seconds()
+            self.save()
+
+            return (timezone.now() - self.started).total_seconds()
+
+        return self.total_runtime
 
     def kill_if_stuck(self):
         if self.ended is not None:
