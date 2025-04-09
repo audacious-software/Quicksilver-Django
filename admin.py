@@ -16,11 +16,11 @@ class RuntimeFilter(admin.SimpleListFilter):
     parameter_name = "runtime"
 
     def lookups(self, request, model_admin):
-        for empty_items in Execution.objects.filter(ended=None):
-            empty_items.runtime()
+        for empty_item in Execution.objects.filter(ended=None):
+            empty_item.runtime()
 
-        for empty_items in Execution.objects.filter(total_runtime=None):
-            empty_items.runtime()
+        for empty_item in Execution.objects.filter(total_runtime=None):
+            empty_item.runtime()
 
         return [
             ('0_1', _('less than a minute')),

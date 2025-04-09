@@ -18,13 +18,17 @@ class Command(BaseCommand):
     help = 'Clears Quicksilver ongoing task execution records.'
 
     def add_arguments(self, parser):
-        parser.add_argument('--before_minutes', required=False, type=int, default=120, help='Removes ongoing task executions older than provided minutes.')
+        parser.add_argument('--before-minutes', required=False, type=int, default=120, help='Removes ongoing task executions older than provided minutes.')
 
     @handle_lock
     def handle(self, *args, **options):
         before = timezone.now() - datetime.timedelta(seconds=(60 * options['before_minutes'])) # pylint: disable=superfluous-parens
 
-        deleted = Execution.objects.filter(ended__lte=before, status='ongoing').delete()[0]
+        deleted = Execution.objects.filter(started__lte=before, status='ongoing').delete()[0]
 
-        if int(options['verbosity']) > 1:
-            logger.info('Cleared %s task execution record(s).', deleted)
+        root_logger = logging.getLogger('')
+
+        if options['verbosity'] > 0:
+            root_logger.setLevel(logging.INFO)
+
+        logger.info('Cleared %s task execution record(s).', deleted)

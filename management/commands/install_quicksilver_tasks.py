@@ -3,12 +3,15 @@
 from __future__ import print_function
 
 import importlib
+import logging
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from quicksilver.models import Task
+
+logger = logging.getLogger(__name__) # pylint: disable=invalid-name
 
 class Command(BaseCommand):
     help = 'Installs necessary Quicksilver tasks for dialogs to function properly.'
@@ -18,6 +21,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         tasks = []
+
+        root_logger = logging.getLogger('')
+
+        if options['verbosity'] > 0:
+            root_logger.setLevel(logging.INFO)
 
         for app in settings.INSTALLED_APPS:
             try:
@@ -39,4 +47,4 @@ class Command(BaseCommand):
                     task_obj.queue = task[3]
                     task_obj.save()
 
-                print('Installed %s...' % str(task))
+                logger.info('Installed %s...', str(task))

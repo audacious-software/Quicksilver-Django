@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
     @add_qs_arguments
     def add_arguments(self, parser):
-        parser.add_argument('--before_minutes', required=False, type=int, default=120, help='Removes successful task executions older than provided minutes.')
+        parser.add_argument('--before-minutes', required=False, type=int, default=120, help='Removes successful task executions older than provided minutes.')
 
     @handle_lock
     @handle_schedule
@@ -28,5 +28,9 @@ class Command(BaseCommand):
 
         deleted = Execution.objects.filter(ended__lte=before, status='success').delete()[0]
 
-        if int(options['verbosity']) > 1:
-            logger.info('Cleared %s task execution record(s).', deleted)
+        root_logger = logging.getLogger('')
+
+        if options['verbosity'] > 0:
+            root_logger.setLevel(logging.INFO)
+
+        logger.info('Cleared %s task execution record(s).', deleted)
