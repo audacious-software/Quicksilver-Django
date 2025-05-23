@@ -30,7 +30,4 @@ class Command(BaseCommand):
 
         root_logger = logging.getLogger('')
 
-        if options['verbosity'] > 0:
-            root_logger.setLevel(logging.INFO)
-
         logger.info('Cleared %s task execution record(s).', deleted)
