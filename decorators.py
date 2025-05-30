@@ -10,14 +10,17 @@ import traceback
 from lockfile import FileLock, AlreadyLocked, LockTimeout
 
 import arrow
+import psutil
 
 from django.conf import settings
 from django.utils.text import slugify
 
-"""
+from .models import Execution
+
+'''
 Decorators for wrapping existing Django management commands for use within the
 Quicksilver task execution system.
-"""
+'''
 
 def add_qs_arguments(handle):
     def wrapper(self, parser):
@@ -55,13 +58,13 @@ def handle_schedule(handle):
 
 # Lock timeout value - how long to wait for the lock to become available.
 # Default behavior is to never wait for the lock to be available (fail fast)
-LOCK_WAIT_TIMEOUT = getattr(settings, "DEFAULT_LOCK_WAIT_TIMEOUT", -1)
+LOCK_WAIT_TIMEOUT = getattr(settings, 'DEFAULT_LOCK_WAIT_TIMEOUT', -1)
 
 def handle_lock(handle): # pylint: disable=too-many-statements
-    """
+    '''
     Decorate the handle method with a file lock to ensure there is only ever
     one process running at any one time.
-    """
+    '''
     def wrapper(self, *args, **options): # pylint: disable=too-many-statements
         lock_prefix = ''
 
@@ -93,8 +96,8 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         else:
             level = logging.DEBUG
 
-        logging.basicConfig(level=level, format="%(message)s")
-        logging.debug("-" * 72)
+        logging.basicConfig(level=level, format='%(message)s')
+        logging.debug('-' * 72)
 
         lock_name = self.__module__.split('.').pop()
 
@@ -105,34 +108,61 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
         lock = FileLock(lock_filename)
 
-        logging.debug("%s - acquiring lock...", lock_name)
+        logging.debug('%s - acquiring lock...', lock_name)
 
         try:
             lock.acquire(LOCK_WAIT_TIMEOUT)
         except AlreadyLocked:
-            logging.debug("Lock already in place. Quitting.")
-            return
+            boot_time = arrow.get(psutil.boot_time()).datetime
+
+            lock_created = arrow.get(os.path.getctime(lock_filename)).datetime
+
+            logging.debug('Checking lock age: %s <? %s.', lock_created.isoformat(), boot_time.isoformat())
+
+            if lock_created < boot_time: # Stale lock left over from reboot.
+                logging.debug('Removing stale lock and jobs from before latest system boot.')
+
+                task_queue = options.get('task_queue', 'default')
+
+                deleted = Execution.objects.filter(task_queue=task_queue, status='ongoing', started__lte=boot_time).delete()
+
+                logging.debug('Deleted %d stale ongoing executions in the "%s" task queue.', deleted, task_queue)
+
+                os.remove(lock_filename)
+
+                logging.debug('Removed lock file %s.', lock_filename)
+
+                try:
+                    logging.debug('Attempting to acquire new lock...')
+
+                    lock.acquire(LOCK_WAIT_TIMEOUT)
+                except AlreadyLocked:
+                    logging.debug('Lock already in place. Quitting.')
+                    return
+            else:
+                logging.debug('Lock already in place. Quitting.')
+                return
         except LockTimeout:
-            logging.debug("Waiting for the lock timed out. Quitting.")
+            logging.debug('Waiting for the lock timed out. Quitting.')
             return
 
-        logging.debug("Acquired.")
+        logging.debug('Acquired.')
 
         options['__qs_lock_filename'] = lock_filename
 
         try:
             handle(self, *args, **options)
         except: # pylint: disable=bare-except
-            logging.error("Command Failed")
+            logging.error('Command Failed')
             logging.error('==' * 72)
             logging.error(traceback.format_exc())
             logging.error('==' * 72)
 
-        logging.debug("Releasing lock...")
+        logging.debug('Releasing lock...')
         lock.release()
-        logging.debug("Released.")
+        logging.debug('Released.')
 
-        logging.debug("Done in %.2f seconds", (time.time() - start_time))
+        logging.debug('Done in %.2f seconds', (time.time() - start_time))
 
         return
 
