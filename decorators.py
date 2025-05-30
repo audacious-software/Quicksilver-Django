@@ -66,6 +66,8 @@ def handle_lock(handle): # pylint: disable=too-many-statements
     one process running at any one time.
     '''
     def wrapper(self, *args, **options): # pylint: disable=too-many-statements, too-many-branches, too-many-locals
+        wrapper_time = time.time()
+
         lock_prefix = ''
 
         try:
@@ -137,16 +139,16 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
             lock_created = arrow.get(os.path.getctime('%s.lock' % lock_filename)).datetime
 
-            logging.debug('Checking lock age: %s <? %s.', lock_created.isoformat(), boot_time.isoformat())
+            logging.debug('Checking lock age: %s <? %s.', lock_created.isoformat(), start_time.isoformat())
 
             if lock_created < start_time: # Stale lock left over from reboot.
                 logging.debug('Removing stale lock and jobs from before latest system boot.')
 
                 task_queue = options.get('task_queue', 'default')
 
-                deleted = Execution.objects.filter(task_queue=task_queue, status='ongoing', started__lte=boot_time).delete()
+                deleted = Execution.objects.filter(task__queue=task_queue, status='ongoing', started__lte=boot_time).delete()
 
-                logging.debug('Deleted %d stale ongoing executions in the "%s" task queue.', deleted, task_queue)
+                logging.debug('Deleted %s stale ongoing executions in the "%s" task queue.', deleted, task_queue)
 
                 os.remove('%s.lock' % lock_filename)
 
@@ -182,7 +184,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         lock.release()
         logging.debug('Released.')
 
-        logging.debug('Done in %.2f seconds', (time.time() - start_time))
+        logging.debug('Done in %.2f seconds', (time.time() - wrapper_time))
 
         return
 

@@ -1,4 +1,4 @@
-The Quicksilver task "{{ execution.task.command }}" was killed as it appeared to be a stale execution from before ({{ execution.started }}) the "{{ task.queue }}" task queue started ({{ task_queue_start }}).
+The Quicksilver task "{{ execution.task.command }}" was killed as it appeared to be a stale execution from before ({{ execution.started }}) the "{{ execution.task.queue }}" task queue started ({{ task_queue_start }}).
 
 Please review the status of this execution on {{ host }}:
 

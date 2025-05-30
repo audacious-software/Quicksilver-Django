@@ -378,15 +378,17 @@ class Execution(models.Model):
             self.ended = timezone.now()
             self.save()
 
+            host = settings.ALLOWED_HOSTS[0]
+
             context = {
                 'execution': self,
+                'host': host,
                 'task_queue_start': task_queue_start,
             }
 
             message = render_to_string('quicksilver_execution_stale_message.txt', context)
             subject = render_to_string('quicksilver_execution_stale_subject.txt', context)
 
-            host = settings.ALLOWED_HOSTS[0]
             from_addr = 'quicksilver@' + host
             admins = [admin[1] for admin in settings.ADMINS]
 
