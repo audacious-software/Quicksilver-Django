@@ -1,5 +1,6 @@
+# pylint: disable=line-too-long, no-member
+
 from __future__ import print_function
-# pylint: disable=pointless-string-statement, line-too-long
 
 import logging
 import os
@@ -17,10 +18,8 @@ from django.utils.text import slugify
 
 from .models import Execution
 
-'''
-Decorators for wrapping existing Django management commands for use within the
-Quicksilver task execution system.
-'''
+# Decorators for wrapping existing Django management commands for use within the
+# Quicksilver task execution system.
 
 def add_qs_arguments(handle):
     def wrapper(self, parser):
@@ -30,7 +29,6 @@ def add_qs_arguments(handle):
         handle(self, parser)
 
     return wrapper
-
 
 def handle_schedule(handle):
     def wrapper(self, *args, **options):
@@ -58,6 +56,7 @@ def handle_schedule(handle):
 
 # Lock timeout value - how long to wait for the lock to become available.
 # Default behavior is to never wait for the lock to be available (fail fast)
+
 LOCK_WAIT_TIMEOUT = getattr(settings, 'DEFAULT_LOCK_WAIT_TIMEOUT', -1)
 
 def handle_lock(handle): # pylint: disable=too-many-statements
@@ -65,7 +64,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
     Decorate the handle method with a file lock to ensure there is only ever
     one process running at any one time.
     '''
-    def wrapper(self, *args, **options): # pylint: disable=too-many-statements
+    def wrapper(self, *args, **options): # pylint: disable=too-many-statements, too-many-branches
         lock_prefix = ''
 
         try:

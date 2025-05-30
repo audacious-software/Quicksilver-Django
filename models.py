@@ -369,9 +369,31 @@ class Execution(models.Model):
 
         return self.total_runtime
 
-    def kill_if_stuck(self):
+    def kill_if_stuck(self, task_queue_start=None):
         if self.ended is not None:
             return False
+
+        if task_queue_start is not None and self.started < task_queue_start:
+            self.status = 'killed'
+            self.ended = timezone.now()
+            self.save()
+
+            context = {
+                'execution': self,
+                'task_queue_start': task_queue_start,
+            }
+
+            message = render_to_string('quicksilver_execution_stale_message.txt', context)
+            subject = render_to_string('quicksilver_execution_stale_subject.txt', context)
+
+            host = settings.ALLOWED_HOSTS[0]
+            from_addr = 'quicksilver@' + host
+            admins = [admin[1] for admin in settings.ADMINS]
+
+            email = EmailMessage(subject, message, from_addr, admins, headers={'Reply-To': admins[0]})
+            email.send()
+
+            return True
 
         max_duration = self.task.get_max_duration()
         run_duration = self.runtime()

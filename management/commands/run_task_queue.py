@@ -25,10 +25,12 @@ class Command(BaseCommand):
 
     @handle_lock
     def handle(self, *args, **options):
+        queue_started = timezone.now()
+
         try:
             for task in Task.objects.filter(queue=options.get('task_queue')):
                 for execution in task.executions.filter(status='ongoing'):
-                    execution.kill_if_stuck()
+                    execution.kill_if_stuck(queue_started)
 
             when_stop = timezone.now() + datetime.timedelta(seconds=(options.get('restart_after') * 60)) # pylint: disable=superfluous-parens
 
