@@ -14,6 +14,7 @@ import arrow
 import psutil
 
 from django.conf import settings
+from django.utils import timezone
 from django.utils.text import slugify
 
 from .models import Execution
@@ -64,7 +65,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
     Decorate the handle method with a file lock to ensure there is only ever
     one process running at any one time.
     '''
-    def wrapper(self, *args, **options): # pylint: disable=too-many-statements, too-many-branches
+    def wrapper(self, *args, **options): # pylint: disable=too-many-statements, too-many-branches, too-many-locals
         lock_prefix = ''
 
         try:
@@ -74,6 +75,26 @@ def handle_lock(handle): # pylint: disable=too-many-statements
                 lock_prefix = settings.ALLOWED_HOSTS[0].replace('.', '-')
             except IndexError:
                 lock_prefix = 'qs_lock'
+
+        # Create a local temp file on first run to use as a proxy for system bootup. Needed
+        # in container contexts...
+
+        startup_filename = '%s/%s__startup__.lock' % (tempfile.gettempdir(), lock_prefix) # pylint: disable=consider-using-f-string
+
+        if os.path.exists(startup_filename):
+            # Check to see if startup file is older than the system runtime (not a container).
+
+            boot_time = arrow.get(psutil.boot_time()).datetime
+
+            start_time = arrow.get(os.path.getctime(startup_filename)).datetime
+
+            if boot_time > start_time:
+                os.remove(startup_filename)
+
+        if os.path.exists(startup_filename) is False:
+            startup_file = os.open(startup_filename, os.O_CREAT | os.O_RDWR)
+            os.write(startup_file, timezone.now().isoformat().encode('utf8'))
+            os.close(startup_file)
 
         lock_suffix = ''
 
@@ -112,13 +133,13 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         try:
             lock.acquire(LOCK_WAIT_TIMEOUT)
         except AlreadyLocked:
-            boot_time = arrow.get(psutil.boot_time()).datetime
+            start_time = arrow.get(os.path.getctime(startup_filename)).datetime
 
-            lock_created = arrow.get(os.path.getctime(lock_filename)).datetime
+            lock_created = arrow.get(os.path.getctime('%s.lock' % lock_filename)).datetime
 
             logging.debug('Checking lock age: %s <? %s.', lock_created.isoformat(), boot_time.isoformat())
 
-            if lock_created < boot_time: # Stale lock left over from reboot.
+            if lock_created < start_time: # Stale lock left over from reboot.
                 logging.debug('Removing stale lock and jobs from before latest system boot.')
 
                 task_queue = options.get('task_queue', 'default')
@@ -127,9 +148,9 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
                 logging.debug('Deleted %d stale ongoing executions in the "%s" task queue.', deleted, task_queue)
 
-                os.remove(lock_filename)
+                os.remove('%s.lock' % lock_filename)
 
-                logging.debug('Removed lock file %s.', lock_filename)
+                logging.debug('Removed lock file %s.', ('%s.lock' % lock_filename))
 
                 try:
                     logging.debug('Attempting to acquire new lock...')
@@ -152,10 +173,10 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         try:
             handle(self, *args, **options)
         except: # pylint: disable=bare-except
-            logging.error('Command Failed')
-            logging.error('==' * 72)
-            logging.error(traceback.format_exc())
-            logging.error('==' * 72)
+            logging.debug('Command Failed')
+            logging.debug('==' * 72)
+            logging.debug(traceback.format_exc())
+            logging.debug('==' * 72)
 
         logging.debug('Releasing lock...')
         lock.release()
