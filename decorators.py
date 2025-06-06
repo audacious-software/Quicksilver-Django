@@ -98,6 +98,8 @@ def handle_lock(handle): # pylint: disable=too-many-statements
             os.write(startup_file, timezone.now().isoformat().encode('utf8'))
             os.close(startup_file)
 
+        start_time = arrow.get(os.path.getctime(startup_filename)).datetime
+
         lock_suffix = ''
 
         if 'task_queue' in options:
@@ -146,7 +148,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
                 task_queue = options.get('task_queue', 'default')
 
-                deleted = Execution.objects.filter(task__queue=task_queue, status='ongoing', started__lte=boot_time).delete()
+                deleted = Execution.objects.filter(task__queue=task_queue, status='ongoing', started__lte=start_time).delete()
 
                 logging.debug('Deleted %s stale ongoing executions in the "%s" task queue.', deleted, task_queue)
 
