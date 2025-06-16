@@ -6,6 +6,7 @@ orbs:
 workflows:
   build:
     jobs:
+      - build-312
       - build-310
       - build-309
       - build-308
@@ -14,6 +15,60 @@ workflows:
       - build-207
 
 jobs:
+  build-310:
+    docker:
+      - image: cimg/python:3.12
+      - image: cimg/postgres:12.18-postgis
+        auth:
+          username: mydockerhub-user
+          password: $DOCKERHUB_PASSWORD  # context / project UI env-var reference
+        environment:
+          POSTGRES_USER: root
+          POSTGRES_DB: circle_test
+          POSTGRES_PASSWORD: ""
+    steps:
+      - checkout
+      - restore_cache:
+          key: venv-312-{{ .Branch }}-{{ checksum "requirements.txt" }}-dep
+      - run:
+          name: Install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: Wait for database
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run:
+          name: Build and validate
+          command: |
+            python3 -m venv --copies /home/circleci/venv
+            . /home/circleci/venv/bin/activate
+            pip install -U pip
+            pip install wheel
+            pip install -r requirements.txt --progress-bar off
+            cd ..
+            mv project quicksilver
+            mkdir django
+            cd django
+            django-admin startproject qs
+            mv ../quicksilver qs
+            cd qs
+            cp quicksilver/circle_settings.py qs/settings.py
+            python manage.py migrate
+            python manage.py test
+            cp quicksilver/.pylintrc .
+            pylint quicksilver
+            bandit -r .
+      - save_cache:
+          key: venv-312-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
+          paths:
+            - "/home/circleci/venv"
+      - store_test_results:
+          path: test-results/
+      - store_artifacts:
+          path: test-reports/
+          destination: python_app
+
   build-310:
     docker:
       - image: cimg/python:3.10
@@ -57,7 +112,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .      
+            bandit -r .
       - save_cache:
           key: venv-310-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
@@ -67,7 +122,6 @@ jobs:
       - store_artifacts:
           path: test-reports/
           destination: python_app
-          
 
   build-309:
     docker:
@@ -112,7 +166,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .      
+            bandit -r .
       - save_cache:
           key: venv-39-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
@@ -122,7 +176,7 @@ jobs:
       - store_artifacts:
           path: test-reports/
           destination: python_app
-          
+
   build-308:
     docker:
       - image: cimg/python:3.8
@@ -166,7 +220,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .      
+            bandit -r .
       - save_cache:
           key: venv-38-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
@@ -220,7 +274,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .      
+            bandit -r .
       - save_cache:
           key: venv-378-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
@@ -274,7 +328,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .      
+            bandit -r .
       - save_cache:
           key: venv-36-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
@@ -328,7 +382,7 @@ jobs:
             python manage.py test
             cp quicksilver/.pylintrc .
             pylint quicksilver
-            bandit -r .      
+            bandit -r .
       - save_cache:
           key: venv-27-{{ .Branch }}-{{ checksum "/home/circleci/django/qs/quicksilver/requirements.txt" }}
           paths:
