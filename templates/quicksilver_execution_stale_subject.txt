@@ -1,1 +1,1 @@
-[Quicksilver-K001 / {{ host }}]: Stale execution detected - {{ task.command }}
+[Quicksilver-K001 / {{ host }}]: Stale execution detected - {{ execution.task.command }}
