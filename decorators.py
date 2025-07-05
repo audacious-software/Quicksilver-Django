@@ -81,7 +81,12 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         # Create a local temp file on first run to use as a proxy for system bootup. Needed
         # in container contexts...
 
-        startup_filename = '%s/%s__startup__.lock' % (tempfile.gettempdir(), lock_prefix) # pylint: disable=consider-using-f-string
+        lockdir = tempfile.gettempdir()
+
+        if hasattr(settings, 'QUICKSILVER_LOCK_DIR'):
+            lockdir = settings.QUICKSILVER_LOCK_DIR
+
+        startup_filename = '%s/%s__startup__.lock' % (lockdir, lock_prefix) # pylint: disable=consider-using-f-string
 
         if os.path.exists(startup_filename):
             # Check to see if startup file is older than the system runtime (not a container).

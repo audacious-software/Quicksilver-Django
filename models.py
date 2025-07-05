@@ -87,6 +87,17 @@ def check_all_quicksilver_tasks_installed(app_configs, **kwargs): # pylint: disa
 
     return errors
 
+@register()
+def check_quicksilver_lock_dir_defined(app_configs, **kwargs): # pylint: disable=unused-argument, invalid-name
+    errors = []
+
+    if hasattr(settings, 'QUICKSILVER_LOCK_DIR') is False:
+        warning = Warning('QUICKSILVER_LOCK_DIR is not set.', hint='Define QUICKSILVER_LOCK_DIR in the settings to set the lock directory or add "quicksilver.W002" to SILENCED_SYSTEM_CHECKS.', obj=None, id='quicksilver.W002')
+
+        errors.append(warning)
+
+    return errors
+
 class QuicksilverIO(io.BytesIO, object): # pylint: disable=too-few-public-methods, useless-object-inheritance
     def __init__(self): # pylint: disable=useless-super-delegation
         super(QuicksilverIO, self).__init__() # pylint: disable=super-with-arguments
