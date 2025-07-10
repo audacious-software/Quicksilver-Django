@@ -92,7 +92,7 @@ def check_quicksilver_lock_dir_defined(app_configs, **kwargs): # pylint: disable
     errors = []
 
     if hasattr(settings, 'QUICKSILVER_LOCK_DIR') is False:
-        warning = Warning('QUICKSILVER_LOCK_DIR is not set.', hint='Define QUICKSILVER_LOCK_DIR in the settings to set the lock directory or add "quicksilver.W002" to SILENCED_SYSTEM_CHECKS.', obj=None, id='quicksilver.W002')
+        warning = Warning('QUICKSILVER_LOCK_DIR is not set.', hint='Define QUICKSILVER_LOCK_DIR (e.g. "QUICKSILVER_LOCK_DIR = tempfile.gettempdir()") in the settings to set the lock directory or add "quicksilver.W002" to SILENCED_SYSTEM_CHECKS.', obj=None, id='quicksilver.W002')
 
         errors.append(warning)
 
