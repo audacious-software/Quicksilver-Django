@@ -21,8 +21,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--before-minutes', required=False, type=int, default=120, help='Removes successful task executions older than provided minutes.')
 
-    @handle_lock
     @handle_schedule
+    @handle_lock
     def handle(self, *args, **options):
         before = timezone.now() - datetime.timedelta(seconds=(60 * options['before_minutes'])) # pylint: disable=superfluous-parens
 
