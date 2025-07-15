@@ -1,0 +1,1 @@
+[Quicksilver-K002 / {{ host }}]: Execution crashed - {{ execution.task.command }}

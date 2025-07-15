@@ -1,0 +1,13 @@
+The Quicksilver task "{{ execution.task.command }}" crashed while running on the "{{ execution.task.queue }}" task queue ({{ task_queue_start }}).
+
+Stack trace:
+
+{{ stack_trace }}
+
+Please review the status of this execution on {{ host }}:
+
+    https://{{ host }}/admin/quicksilver/execution/{{ execution.pk }}/change/
+
+Thank you,
+
+- Quicksilver Task Queue

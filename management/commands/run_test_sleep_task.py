@@ -19,8 +19,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         pass
 
-    @handle_lock
     @handle_schedule
+    @handle_lock
     def handle(self, *args, **options):
         logger.info('Start time: %s', timezone.now().isoformat())
         time.sleep(5)
