@@ -338,26 +338,31 @@ class Execution(models.Model):
 
             if self.status == 'ongoing':
                 self.status = 'success'
-        except: # pylint: disable=bare-except
-            traceback.print_exc(None, qs_out)
-            self.status = 'error'
 
-        self.ended = timezone.now()
-        self.output = qs_out.getvalue().decode('utf-8')
+            self.ended = timezone.now()
+            self.output = qs_out.getvalue().decode('utf-8')
 
-        output_lines = self.output.splitlines()
+            output_lines = self.output.splitlines()
 
-        if output_lines:
-            last_line = output_lines[-1]
+            if output_lines:
+                last_line = output_lines[-1]
 
-            if last_line.startswith('_qs_next_run:'):
-                self.task.next_run = arrow.get(last_line.replace('_qs_next_run:', '').strip()).datetime
+                if last_line.startswith('_qs_next_run:'):
+                    self.task.next_run = arrow.get(last_line.replace('_qs_next_run:', '').strip()).datetime
 
-                self.task.save()
+                    self.task.save()
+            else:
+                logger.error('Task not Quicksilver-enabled: %s', self.task)
 
             self.save()
-        else:
-            logger.error('Task not Quicksilver-enabled: %s', self.task)
+        except: # pylint: disable=bare-except
+            self.output = 'Task exception [%s]: %s' % (self.task, traceback.format_exc())
+
+            logger.error(self.output)
+
+            self.status = 'error'
+            self.ended = timezone.now()
+            self.save()
 
     def runtime(self):
         if self.ended is None:
