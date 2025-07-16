@@ -21,7 +21,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--task-queue', default='default')
         parser.add_argument('--sleep-duration', type=int, default=5)
-        parser.add_argument('--restart-after', type=int, default=30)
+        parser.add_argument('--restart-after', type=int, default=15)
 
     @handle_lock
     def handle(self, *args, **options):
