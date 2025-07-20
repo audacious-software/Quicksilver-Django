@@ -4,10 +4,8 @@ from __future__ import print_function
 
 import logging
 import os
-import sys
 import tempfile
 import time
-import traceback
 
 from lockfile import FileLock, AlreadyLocked, LockTimeout
 
@@ -52,7 +50,7 @@ def handle_schedule(handle):
 
         try:
             handle(self, *args, **options)
-        except Exception as exc:
+        except Exception as exc: # pylint: disable=broad-exception-caught
             exception = exc
 
         if invoked_by_qs:
@@ -192,7 +190,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
         try:
             handle(self, *args, **options)
-        except Exception as exc: # pylint: disable=bare-except
+        except Exception as exc: # pylint: disable=broad-exception-caught
             exception = exc
 
         logging.debug('Releasing lock...')

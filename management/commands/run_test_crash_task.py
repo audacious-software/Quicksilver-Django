@@ -24,3 +24,4 @@ class Command(BaseCommand):
 
         not_a_number = 122345 / 0
 
+        logger.error('Not a number: %s', not_a_number)
