@@ -58,7 +58,7 @@ def handle_schedule(handle):
                 print('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat())
 
         if exception is not None:
-            raise exception
+            raise exception # pylint: disable=raising-bad-type
 
     return wrapper
 
@@ -200,7 +200,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         logging.debug('Done in %.2f seconds', (time.time() - wrapper_time))
 
         if exception is not None:
-            raise exception
+            raise exception # pylint: disable=raising-bad-type
 
         return
 
