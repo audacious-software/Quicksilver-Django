@@ -124,7 +124,12 @@ class Task(models.Model):
     postpone_alert_until = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return self.command + '[' + self.queue + '] ' + ' '.join(self.arguments.splitlines())
+        description = '%s[%s]' % (self.command, self.queue)
+
+        if self.arguments.splitlines:
+            description = '%s %s' % (description, ' '.join(self.arguments.splitlines()))
+
+        return description
 
     def run(self):
         execution = Execution.objects.create(task=self, started=timezone.now())
@@ -324,13 +329,8 @@ class Execution(models.Model):
             max_duration = self.task.get_max_duration()
 
             if max_duration is not None:
-                try:
-                    with ExecutionTimeout(seconds=max_duration):
-                        call_command(self.task.command, *args, _qs_context=True, _qs_next_interval=interval)
-                except ExecutionTimeoutError:
-                    traceback.print_exc(None, qs_out)
-
-                    self.kill_if_stuck()
+                with ExecutionTimeout(seconds=max_duration):
+                    call_command(self.task.command, *args, _qs_context=True, _qs_next_interval=interval)
             else:
                 call_command(self.task.command, *args, _qs_context=True, _qs_next_interval=interval)
 
@@ -356,13 +356,17 @@ class Execution(models.Model):
 
             self.save()
         except: # pylint: disable=bare-except
-            self.output = 'Task exception [%s]: %s' % (self.task, traceback.format_exc())
+            self.output = 'Task exception %s:\n\n%s' % (self.task, traceback.format_exc())
 
             logger.error(self.output)
 
             self.status = 'error'
             self.ended = timezone.now()
             self.save()
+
+            self.task.next_run = timezone.now() + datetime.timedelta(seconds=self.task.repeat_interval)
+
+            self.task.save()
 
     def runtime(self):
         if self.ended is None:

@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import logging
 import os
+import sys
 import tempfile
 import time
 import traceback
@@ -47,11 +48,19 @@ def handle_schedule(handle):
 
             del options['_qs_next_interval']
 
-        handle(self, *args, **options)
+        exception = None
+
+        try:
+            handle(self, *args, **options)
+        except Exception as exc:
+            exception = exc
 
         if invoked_by_qs:
             if next_interval is not None:
                 print('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat())
+
+        if exception is not None:
+            raise exception
 
     return wrapper
 
@@ -179,19 +188,21 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
         options['__qs_lock_filename'] = lock_filename
 
+        exception = None
+
         try:
             handle(self, *args, **options)
-        except: # pylint: disable=bare-except
-            logging.debug('Command Failed')
-            logging.debug('==' * 72)
-            logging.debug(traceback.format_exc())
-            logging.debug('==' * 72)
+        except Exception as exc: # pylint: disable=bare-except
+            exception = exc
 
         logging.debug('Releasing lock...')
         lock.release()
         logging.debug('Released.')
 
         logging.debug('Done in %.2f seconds', (time.time() - wrapper_time))
+
+        if exception is not None:
+            raise exception
 
         return
 
