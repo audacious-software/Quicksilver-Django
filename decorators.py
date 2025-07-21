@@ -50,7 +50,7 @@ def handle_schedule(handle):
 
         try:
             handle(self, *args, **options)
-        except Exception as exc: # pylint: disable=broad-exception-caught
+        except Exception as exc: # pylint: disable=broad-exception-caught, broad-except
             exception = exc
 
         if invoked_by_qs:
@@ -190,7 +190,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
         try:
             handle(self, *args, **options)
-        except Exception as exc: # pylint: disable=broad-exception-caught
+        except Exception as exc: # pylint: disable=broad-exception-caught, broad-except
             exception = exc
 
         logging.debug('Releasing lock...')
