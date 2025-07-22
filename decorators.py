@@ -30,6 +30,32 @@ def add_qs_arguments(handle):
 
     return wrapper
 
+def handle_logging(handle):
+    def wrapper(self, *args, **options):
+        verbosity = options.get('verbosity', -1)
+
+        if verbosity != -1:
+            level = logging.DEBUG
+
+            if verbosity == 0:
+                level = logging.ERROR
+            elif verbosity == 1:
+                level = logging.WARN
+            elif verbosity == 2:
+                level = logging.INFO
+
+            logger = logging.getLogger(__name__)
+            logger.setLevel(level)
+
+            if len(logger.handlers) == 0:
+                logger.debug('Logger configured. Level = %s' , level)
+
+            options['_logger'] = logger
+
+        handle(self, *args, **options)
+
+    return wrapper
+
 def handle_schedule(handle):
     def wrapper(self, *args, **options):
         invoked_by_qs = False
@@ -122,18 +148,13 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         lock_suffix = slugify(lock_suffix)
 
         start_time = time.time()
-        verbosity = options.get('verbosity', 0)
-        if verbosity == 0:
-            level = logging.ERROR
-        elif verbosity == 1:
-            level = logging.WARN
-        elif verbosity == 2:
-            level = logging.INFO
-        else:
-            level = logging.DEBUG
 
-        logging.basicConfig(level=level, format='%(message)s')
-        logging.debug('-' * 72)
+        logger = options.get('_logger', None)
+
+        if logger is None:
+            logger = logging.getLogger(__name__)
+
+        logger.debug('-' * 72)
 
         lock_name = self.__module__.split('.').pop()
 
@@ -144,7 +165,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
         lock = FileLock(lock_filename)
 
-        logging.debug('%s - acquiring lock...', lock_name)
+        logger.debug('%s - acquiring lock...', lock_name)
 
         try:
             lock.acquire(LOCK_WAIT_TIMEOUT)
@@ -153,36 +174,36 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
             lock_created = arrow.get(os.path.getctime('%s.lock' % lock_filename)).datetime
 
-            logging.debug('Checking lock age: %s <? %s.', lock_created.isoformat(), start_time.isoformat())
+            logger.debug('Checking lock age: %s <? %s.', lock_created.isoformat(), start_time.isoformat())
 
             if lock_created < start_time: # Stale lock left over from reboot.
-                logging.debug('Removing stale lock and jobs from before latest system boot.')
+                logger.debug('Removing stale lock and jobs from before latest system boot.')
 
                 task_queue = options.get('task_queue', 'default')
 
                 deleted = Execution.objects.filter(task__queue=task_queue, status='ongoing', started__lte=start_time).delete()
 
-                logging.debug('Deleted %s stale ongoing executions in the "%s" task queue.', deleted, task_queue)
+                logger.debug('Deleted %s stale ongoing executions in the "%s" task queue.', deleted, task_queue)
 
                 os.remove('%s.lock' % lock_filename)
 
-                logging.debug('Removed lock file %s.', ('%s.lock' % lock_filename))
+                logger.debug('Removed lock file %s.', ('%s.lock' % lock_filename))
 
                 try:
-                    logging.debug('Attempting to acquire new lock...')
+                    logger.debug('Attempting to acquire new lock...')
 
                     lock.acquire(LOCK_WAIT_TIMEOUT)
                 except AlreadyLocked:
-                    logging.debug('Lock already in place. Quitting.')
+                    logger.debug('Lock already in place. Quitting.')
                     return
             else:
-                logging.debug('Lock already in place. Quitting.')
+                logger.debug('Lock already in place. Quitting.')
                 return
         except LockTimeout:
-            logging.debug('Waiting for the lock timed out. Quitting.')
+            logger.debug('Waiting for the lock timed out. Quitting.')
             return
 
-        logging.debug('Acquired.')
+        logger.debug('Acquired.')
 
         options['__qs_lock_filename'] = lock_filename
 
@@ -193,11 +214,11 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         except Exception as exc: # pylint: disable=broad-exception-caught, broad-except
             exception = exc
 
-        logging.debug('Releasing lock...')
+        logger.debug('Releasing lock...')
         lock.release()
-        logging.debug('Released.')
+        logger.debug('Released.')
 
-        logging.debug('Done in %.2f seconds', (time.time() - wrapper_time))
+        logger.debug('Done in %.2f seconds', (time.time() - wrapper_time))
 
         if exception is not None:
             raise exception # pylint: disable=raising-bad-type
