@@ -47,8 +47,8 @@ def handle_logging(handle):
             logger = logging.getLogger(__name__)
             logger.setLevel(level)
 
-            if len(logger.handlers) == 0:
-                logger.debug('Logger configured. Level = %s' , level)
+            if len(logger.handlers) == 0: # pylint: disable=len-as-condition
+                logger.debug('Logger configured. Level = %s', level)
 
             options['_logger'] = logger
 
