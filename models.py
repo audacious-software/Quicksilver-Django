@@ -33,8 +33,6 @@ RUN_STATUSES = (
     ('ongoing', 'Ongoing',),
 )
 
-logger = logging.getLogger(__name__) # pylint: disable=invalid-name
-
 class ExecutionTimeoutError(Exception):
     pass
 
@@ -306,6 +304,8 @@ class Execution(models.Model):
         return str(self.task)
 
     def run(self):
+        logging.debug('-' * 72)
+
         qs_out = QuicksilverIO()
 
         args = []
@@ -315,8 +315,7 @@ class Execution(models.Model):
 
         try:
             self.status = 'ongoing'
-
-            self.save()
+            self.save(update_fields=['status'])
 
             orig_stdout = sys.stdout
             sys.stdout = qs_out
@@ -340,7 +339,9 @@ class Execution(models.Model):
                 self.status = 'success'
 
             self.ended = timezone.now()
-            self.output = qs_out.getvalue().decode('utf-8')
+
+            self.output = qs_out.getvalue().decode('utf-8').strip()
+            self.save(update_fields=['status', 'ended', 'output'])
 
             output_lines = self.output.splitlines()
 
@@ -352,17 +353,16 @@ class Execution(models.Model):
 
                     self.task.save()
             else:
-                logger.error('Task not Quicksilver-enabled: %s', self.task)
+                logging.error('Task not Quicksilver-enabled: %s', self.task)
 
-            self.save()
         except: # pylint: disable=bare-except
             self.output = 'Task exception %s:\n\n%s' % (self.task, traceback.format_exc())
 
-            logger.error(self.output)
+            logging.error(self.output)
 
             self.status = 'error'
             self.ended = timezone.now()
-            self.save()
+            self.save(update_fields=['status', 'ended', 'output'])
 
             self.task.next_run = timezone.now() + datetime.timedelta(seconds=self.task.repeat_interval)
 
@@ -378,12 +378,12 @@ class Execution(models.Model):
 
             if self.ended is not None:
                 self.total_runtime = (self.ended - self.started).total_seconds()
-                self.save()
+                self.save(update_fields=['total_runtime'])
 
                 return (self.ended - self.started).total_seconds()
 
             self.total_runtime = (timezone.now() - self.started).total_seconds()
-            self.save()
+            self.save(update_fields=['total_runtime'])
 
             return (timezone.now() - self.started).total_seconds()
 
@@ -396,7 +396,7 @@ class Execution(models.Model):
         if task_queue_start is not None and self.started < task_queue_start:
             self.status = 'killed'
             self.ended = timezone.now()
-            self.save()
+            self.save(update_fields=['status', 'ended'])
 
             host = settings.ALLOWED_HOSTS[0]
 
@@ -424,7 +424,7 @@ class Execution(models.Model):
             if run_duration > max_duration:
                 self.status = 'killed'
                 self.ended = timezone.now()
-                self.save()
+                self.save(update_fields=['status', 'ended'])
 
                 context = {
                     'execution': self,

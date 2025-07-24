@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import logging
 import os
+import sys
 import tempfile
 import time
 
@@ -23,7 +24,7 @@ from .models import Execution
 
 def add_qs_arguments(handle):
     def wrapper(self, parser):
-        parser.add_argument('--qs-context', dest='_qs_context', default=True, required=False)
+        parser.add_argument('--qs-context', dest='_qs_context', action='store_true', required=False)
         parser.add_argument('--qs-next-interval', dest='_qs_next_interval', type=int, default=5, required=False)
 
         handle(self, parser)
@@ -44,13 +45,10 @@ def handle_logging(handle):
             elif verbosity == 2:
                 level = logging.INFO
 
-            logger = logging.getLogger(__name__)
-            logger.setLevel(level)
+            logging.basicConfig(format='%(asctime)s - %(message)s', level=level, force=True)
+            logging.debug('Logger configured. Level = %s', level)
 
-            if len(logger.handlers) == 0: # pylint: disable=len-as-condition
-                logger.debug('Logger configured. Level = %s', level)
-
-            options['_logger'] = logger
+        logging.debug('verbosity = %s', verbosity)
 
         handle(self, *args, **options)
 
@@ -61,9 +59,11 @@ def handle_schedule(handle):
         invoked_by_qs = False
 
         if '_qs_context' in options:
-            invoked_by_qs = options['_qs_context']
+            invoked_by_qs = options.get('_qs_context', False)
 
             del options['_qs_context']
+
+        logging.debug('_qs_context = %s', invoked_by_qs)
 
         next_interval = None
 
@@ -81,7 +81,7 @@ def handle_schedule(handle):
 
         if invoked_by_qs:
             if next_interval is not None:
-                print('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat())
+                print('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat(), file=sys.stdout, flush=True)
 
         if exception is not None:
             raise exception # pylint: disable=raising-bad-type
@@ -149,13 +149,6 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
         start_time = time.time()
 
-        logger = options.get('_logger', None)
-
-        if logger is None:
-            logger = logging.getLogger(__name__)
-
-        logger.debug('-' * 72)
-
         lock_name = self.__module__.split('.').pop()
 
         lock_filename = '%s/%s__%s__%s' % (tempfile.gettempdir(), lock_prefix, lock_name, lock_suffix) # pylint: disable=consider-using-f-string
@@ -165,7 +158,7 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
         lock = FileLock(lock_filename)
 
-        logger.debug('%s - acquiring lock...', lock_name)
+        logging.debug('%s - acquiring lock...', lock_name)
 
         try:
             lock.acquire(LOCK_WAIT_TIMEOUT)
@@ -174,36 +167,36 @@ def handle_lock(handle): # pylint: disable=too-many-statements
 
             lock_created = arrow.get(os.path.getctime('%s.lock' % lock_filename)).datetime
 
-            logger.debug('Checking lock age: %s <? %s.', lock_created.isoformat(), start_time.isoformat())
+            logging.debug('Checking lock age: %s <? %s.', lock_created.isoformat(), start_time.isoformat())
 
             if lock_created < start_time: # Stale lock left over from reboot.
-                logger.debug('Removing stale lock and jobs from before latest system boot.')
+                logging.debug('Removing stale lock and jobs from before latest system boot.')
 
                 task_queue = options.get('task_queue', 'default')
 
                 deleted = Execution.objects.filter(task__queue=task_queue, status='ongoing', started__lte=start_time).delete()
 
-                logger.debug('Deleted %s stale ongoing executions in the "%s" task queue.', deleted, task_queue)
+                logging.debug('Deleted %s stale ongoing executions in the "%s" task queue.', deleted, task_queue)
 
                 os.remove('%s.lock' % lock_filename)
 
-                logger.debug('Removed lock file %s.', ('%s.lock' % lock_filename))
+                logging.debug('Removed lock file %s.', ('%s.lock' % lock_filename))
 
                 try:
-                    logger.debug('Attempting to acquire new lock...')
+                    logging.debug('Attempting to acquire new lock...')
 
                     lock.acquire(LOCK_WAIT_TIMEOUT)
                 except AlreadyLocked:
-                    logger.debug('Lock already in place. Quitting.')
+                    logging.debug('Lock already in place. Quitting.')
                     return
             else:
-                logger.debug('Lock already in place. Quitting.')
+                logging.debug('Lock already in place. Quitting.')
                 return
         except LockTimeout:
-            logger.debug('Waiting for the lock timed out. Quitting.')
+            logging.debug('Waiting for the lock timed out. Quitting.')
             return
 
-        logger.debug('Acquired.')
+        logging.debug('Acquired.')
 
         options['__qs_lock_filename'] = lock_filename
 
@@ -214,11 +207,11 @@ def handle_lock(handle): # pylint: disable=too-many-statements
         except Exception as exc: # pylint: disable=broad-exception-caught, broad-except
             exception = exc
 
-        logger.debug('Releasing lock...')
+        logging.debug('Releasing lock...')
         lock.release()
-        logger.debug('Released.')
+        logging.debug('Released.')
 
-        logger.debug('Done in %.2f seconds', (time.time() - wrapper_time))
+        logging.debug('Done in %.2f seconds', (time.time() - wrapper_time))
 
         if exception is not None:
             raise exception # pylint: disable=raising-bad-type
