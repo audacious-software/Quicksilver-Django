@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import logging
 import os
+import platform
 import sys
 import tempfile
 import time
@@ -45,7 +46,11 @@ def handle_logging(handle):
             elif verbosity == 2:
                 level = logging.INFO
 
-            logging.basicConfig(format='%(asctime)s - %(message)s', level=level, force=True)
+            if platform.python_version_tuple() > (3, 8, 0):
+                logging.basicConfig(format='%(asctime)s - %(message)s', level=level, force=True)
+            else:
+                logging.basicConfig(format='%(asctime)s - %(message)s', level=level)
+
             logging.debug('Logger configured. Level = %s', level)
 
         logging.debug('verbosity = %s', verbosity)
