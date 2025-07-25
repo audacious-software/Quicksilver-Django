@@ -9,6 +9,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
+from quicksilver.decorators import handle_logging
 from quicksilver.models import Task
 
 logger = logging.getLogger(__name__) # pylint: disable=invalid-name
@@ -19,13 +20,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         pass
 
+    @handle_logging
     def handle(self, *args, **options):
         tasks = []
-
-        root_logger = logging.getLogger('')
-
-        if options['verbosity'] > 0:
-            root_logger.setLevel(logging.INFO)
 
         for app in settings.INSTALLED_APPS:
             try:
@@ -47,4 +44,4 @@ class Command(BaseCommand):
                     task_obj.queue = task[3]
                     task_obj.save()
 
-                logger.info('Installed %s...', str(task))
+                logging.info('Installed %s...', str(task))
