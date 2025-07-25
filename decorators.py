@@ -46,7 +46,7 @@ def handle_logging(handle):
             elif verbosity == 2:
                 level = logging.INFO
 
-            if platform.python_version_tuple() > (3, 8, 0):
+            if platform.python_version_tuple() >= ('3', '8', '0'):
                 logging.basicConfig(format='%(asctime)s - %(message)s', level=level, force=True)
             else:
                 logging.basicConfig(format='%(asctime)s - %(message)s', level=level)
