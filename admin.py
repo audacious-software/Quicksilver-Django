@@ -56,8 +56,10 @@ class RuntimeFilter(admin.SimpleListFilter):
 class TaskAdmin(admin.ModelAdmin):
     list_display = ('command', 'queue', 'repeat_interval', 'next_run',)
     list_filter = ('next_run', 'queue',)
+    search_fields = ('command', 'arguments', 'queue',)
 
 @admin.register(Execution)
 class ExecutionAdmin(admin.ModelAdmin):
     list_display = ('task', 'total_runtime', 'started', 'ended', 'status',)
     list_filter = ('status', 'started', 'ended', ('task', DropdownFilter), RuntimeFilter)
+    search_fields = ('task__command', 'output',)
