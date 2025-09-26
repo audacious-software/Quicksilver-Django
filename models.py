@@ -1,8 +1,6 @@
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-
 import datetime
 import importlib
 import io
