@@ -1,6 +1,7 @@
-from __future__ import print_function
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
+
+import six
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -17,4 +18,4 @@ class Command(BaseCommand):
     @handle_schedule
     @handle_lock
     def handle(self, *args, **options):
-        print('Current time: ' + timezone.now().isoformat())
+        six.print_('Current time: ' + timezone.now().isoformat())

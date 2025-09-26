@@ -1,7 +1,5 @@
 # pylint: disable=line-too-long, no-member
 
-from __future__ import print_function
-
 import logging
 import os
 import platform
@@ -13,6 +11,7 @@ from lockfile import FileLock, AlreadyLocked, LockTimeout
 
 import arrow
 import psutil
+import six
 
 from django.conf import settings
 from django.utils import timezone
@@ -86,7 +85,7 @@ def handle_schedule(handle):
 
         if invoked_by_qs:
             if next_interval is not None:
-                print('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat(), file=sys.stdout, flush=True)
+                six.print_('_qs_next_run: ' + arrow.get().shift(seconds=next_interval).isoformat(), file=sys.stdout, flush=True)
 
         if exception is not None:
             raise exception # pylint: disable=raising-bad-type

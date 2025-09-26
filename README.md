@@ -13,8 +13,6 @@ A *command* consists of an annotated Django management command that exposes some
 # pylint: disable=no-member, line-too-long
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
-
 import datetime
 import logging
 
