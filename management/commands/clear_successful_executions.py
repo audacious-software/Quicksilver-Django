@@ -26,4 +26,4 @@ class Command(BaseCommand):
 
         deleted = Execution.objects.filter(ended__lte=before, status='success').delete()[0]
 
-        logger.info('Cleared %s task execution record(s).', deleted)
+        logger.debug('Cleared %s task execution record(s).', deleted)

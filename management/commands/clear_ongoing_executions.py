@@ -27,6 +27,6 @@ class Command(BaseCommand):
         root_logger = logging.getLogger('')
 
         if options['verbosity'] > 0:
-            root_logger.setLevel(logging.INFO)
+            root_logger.setLevel(logging.DEBUG)
 
-        logger.info('Cleared %s task execution record(s).', deleted)
+        logger.debug('Cleared %s task execution record(s).', deleted)

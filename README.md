@@ -39,7 +39,7 @@ class Command(BaseCommand):
         deleted = Execution.objects.filter(ended__lte=before, status='success').delete()[0]
 
         if int(options['verbosity']) > 1:
-            logging.info('Cleared %s task execution record(s).', deleted)
+            logging.debug('Cleared %s task execution record(s).', deleted)
 ```
 
 When run, this command inspects the log of Quicksilver executions (more on these below) and deletes from the database all successful executions older than a certain date. Executions that did not successfully exit - or are still ongoing - are left on the system for diagnostic purposes.
