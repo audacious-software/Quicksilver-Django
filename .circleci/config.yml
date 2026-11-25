@@ -215,7 +215,7 @@ jobs:
       - checkout
       - restore_cache:
           key: venv-38-{{ .Branch }}-{{ checksum "requirements.txt" }}-dep
-     - run:
+      - run:
           name: Build and validate
           command: |
             python3 -m venv --copies /home/circleci/venv
